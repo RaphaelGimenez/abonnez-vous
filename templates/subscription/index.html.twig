@@ -23,6 +23,22 @@
 			</div>
 		{% endfor %}
 
+		{% for message in app.flashes('error') %}
+			<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+				<span class="block sm:inline">{{ message }}</span>
+				<button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+					<span class="text-2xl">&times;</span>
+				</button>
+			</div>
+		{% endfor %}
+
+		{% if userPlan %}
+			<div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-6" role="alert">
+				<span class="block sm:inline">Vous êtes actuellement abonné au plan
+					<strong>{{ userPlan.name }}</strong>.</span>
+			</div>
+		{% endif %}
+
 		<div class="flex justify-center mb-8">
 			<div class="inline-flex rounded-lg border border-gray-300 bg-gray-100 p-1" role="tablist" aria-label="Période de facturation">
 				<button id="monthlyBtn" class="px-6 py-2 rounded-md bg-white shadow-sm font-semibold text-cyan-600 transition duration-200" role="tab" aria-selected="true" aria-controls="pricing-panel">
@@ -55,7 +71,7 @@
 						<form method="post" action="{{ path('app_subscription_subscribe', {id: plan.id}) }}" class="subscription-form">
 							<input type="hidden" name="_token" value="{{ csrf_token('subscribe' ~ plan.id) }}">
 							<input type="hidden" name="billing_period" value="monthly" class="billing-period-input">
-							<button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">
+							<button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" {% if userPlan %} disabled {% endif %}>
 								Je m'abonne
 							</button>
 						</form>

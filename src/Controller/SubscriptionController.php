@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Subscription;
+use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
 use App\Enum\SubscriptionStatus;
 use App\Repository\PlanRepository;
@@ -22,8 +23,19 @@ final class SubscriptionController extends AbstractController
   {
     $plans = $planRepository->findAll();
 
+    $userPlan = null;
+    /** @var User $user */
+    $user = $this->getUser();
+    if ($user) {
+      $subscription = $user->getSubscription();
+      if ($subscription) {
+        $userPlan = $subscription->getPlan();
+      }
+    }
+
     return $this->render('subscription/index.html.twig', [
       'plans' => $plans,
+      'userPlan' => $userPlan,
     ]);
   }
 
@@ -35,7 +47,12 @@ final class SubscriptionController extends AbstractController
     Request $request,
     CsrfTokenManagerInterface $csrfTokenManager
   ): Response {
+    /** @var User $user */
     $user = $this->getUser();
+    if ($user->getSubscription()) {
+      $this->addFlash('error', 'Vous avez déjà un abonnement actif.');
+      return $this->redirectToRoute('app_subscription');
+    }
     $planId = $request->attributes->get('id');
 
     // Validate CSRF token
