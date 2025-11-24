@@ -22,7 +22,6 @@ security:
                 check_path: app_register
                 username_parameter: registration_form[email]
                 password_parameter: registration_form[plainPassword]
-                success_handler: App\Security\LoginSuccessHandler
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
