@@ -1,4 +1,5 @@
 {# filepath: templates/subscription/index.html.twig #}
+{% SubscriptionStatus = enum('App\\Enum\\SubscriptionStatus') %}
 {% extends 'base.html.twig' %}
 {% block title %}
 	Choisissez votre offre
@@ -36,7 +37,7 @@
 				<span class="block sm:inline">Vous êtes actuellement abonné au plan
 					<strong>
 						{{ userPlan.name }}
-						{% if userSubscription.billingPeriod == 'annual' %}
+						{% if userSubscription.billingPeriod == SubscriptionStatus::YEARLY %}
 							annuel
 						{% else %}
 							mensuel

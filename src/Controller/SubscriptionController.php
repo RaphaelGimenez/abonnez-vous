@@ -6,8 +6,10 @@ use App\Entity\Subscription;
 use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
 use App\Enum\SubscriptionStatus;
+use App\Exception\AlreadySubscribedException;
+use App\Exception\InvalidSubscriptionStatusException;
 use App\Repository\PlanRepository;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Service\SubscriptionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,28 +20,23 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 final class SubscriptionController extends AbstractController
 {
+  public function __construct(private SubscriptionService $subscriptionService) {}
+
   #[Route('/subscription/subscribe', name: 'app_subscription')]
   public function index(PlanRepository $planRepository): Response
   {
     $plans = $planRepository->findAll();
 
-    $userPlan = null;
-    /** @var User $user */
+    /** @var User|null $user */
     $user = $this->getUser();
-    if ($user) {
-      $subscription = $user->getSubscription();
-      if ($subscription) {
-        $userPlan = $subscription->getPlan();
-      }
-    }
-
-    $manageUrl = $this->generateUrl('app_subscription_manage');
+    $subscription = $user?->getSubscription();
+    $userPlan = $subscription?->getPlan();
 
     return $this->render('subscription/index.html.twig', [
       'plans' => $plans,
       'userPlan' => $userPlan,
-      'userSubscription' => $user ? $user->getSubscription() : null,
-      'manageUrl' => $manageUrl,
+      'userSubscription' => $subscription,
+      'manageUrl' => $this->generateUrl('app_subscription_manage'),
     ]);
   }
 
@@ -50,7 +47,6 @@ final class SubscriptionController extends AbstractController
     /** @var User $user */
     $user = $this->getUser();
     $subscription = $user->getSubscription();
-
 
     if (!$subscription) {
       $this->addFlash('error', 'Vous n\'avez pas d\'abonnement actif à gérer.');
@@ -67,16 +63,11 @@ final class SubscriptionController extends AbstractController
   #[IsGranted('IS_AUTHENTICATED_FULLY')]
   public function subscribe(
     PlanRepository $planRepository,
-    EntityManagerInterface $entityManager,
     Request $request,
     CsrfTokenManagerInterface $csrfTokenManager
   ): Response {
     /** @var User $user */
     $user = $this->getUser();
-    if ($user->getSubscription()) {
-      $this->addFlash('error', 'Vous avez déjà un abonnement actif.');
-      return $this->redirectToRoute('app_subscription');
-    }
     $planId = $request->attributes->get('id');
 
     // Validate CSRF token
@@ -85,10 +76,10 @@ final class SubscriptionController extends AbstractController
       throw $this->createAccessDeniedException('Invalid CSRF token.');
     }
 
-    $billingPeriod = $request->request->get('billing_period');
+    $billingPeriod = SubscriptionBillingPeriod::tryFrom($request->request->get('billing_period'));
 
     // Validate billing period
-    if (!SubscriptionBillingPeriod::tryFrom($billingPeriod)) {
+    if (!$billingPeriod) {
       $this->addFlash('error', 'Invalid billing period.');
       return $this->redirectToRoute('app_subscription');
     }
@@ -99,25 +90,12 @@ final class SubscriptionController extends AbstractController
       return $this->redirectToRoute('app_subscription');
     }
 
-    // Create subscription
-    $subscription = new Subscription();
-    $subscription->setUser($user);
-    $subscription->setPlan($plan);
-    $subscription->setStatus(SubscriptionStatus::ACTIVE);
-    $subscription->setBillingPeriod(SubscriptionBillingPeriod::from($billingPeriod));
-    $subscription->setStartDate(new \DateTimeImmutable());
-    if ($billingPeriod === 'annual') {
-      $endDate = (new \DateTimeImmutable())->modify('+1 year');
-    } else {
-      $endDate = (new \DateTimeImmutable())->modify('+1 month');
+    try {
+      $this->subscriptionService->createSubscription($user, $plan, $billingPeriod);
+      $this->addFlash('success', 'Vous vous êtes abonné avec succès au plan ' . $plan->getName() . '.');
+    } catch (AlreadySubscribedException $e) {
+      $this->addFlash('error', $e->getMessage());
     }
-    $subscription->setEndDate($endDate);
-    $subscription->setAutoRenew(true);
-
-    $entityManager->persist($subscription);
-    $entityManager->flush();
-
-    $this->addFlash('success', 'Vous vous êtes abonné avec succès au plan ' . $plan->getName() . '.');
 
     return $this->redirectToRoute('app_subscription');
   }
@@ -125,7 +103,6 @@ final class SubscriptionController extends AbstractController
   #[Route('/subscription/cancel', name: 'app_subscription_cancel', methods: ['POST'])]
   #[IsGranted('IS_AUTHENTICATED_FULLY')]
   public function cancel(
-    EntityManagerInterface $entityManager,
     Request $request,
     CsrfTokenManagerInterface $csrfTokenManager
   ): Response {
@@ -144,13 +121,12 @@ final class SubscriptionController extends AbstractController
       throw $this->createAccessDeniedException('Invalid CSRF token.');
     }
 
-    $subscription->setStatus(SubscriptionStatus::CANCELED);
-    $subscription->setAutoRenew(false);
-
-    $entityManager->persist($subscription);
-    $entityManager->flush();
-
-    $this->addFlash('success', 'Votre abonnement a été annulé avec succès.');
+    try {
+      $this->subscriptionService->cancelSubscription($subscription);
+      $this->addFlash('success', 'Votre abonnement a été annulé avec succès.');
+    } catch (InvalidSubscriptionStatusException $e) {
+      $this->addFlash('error', $e->getMessage());
+    }
 
     return $this->redirectToRoute('app_subscription_manage');
   }
@@ -158,28 +134,30 @@ final class SubscriptionController extends AbstractController
   #[Route('/subscription/resume', name: 'app_subscription_resume', methods: ['POST'])]
   #[IsGranted('IS_AUTHENTICATED_FULLY')]
   public function resume(
-    EntityManagerInterface $entityManager,
     Request $request,
     CsrfTokenManagerInterface $csrfTokenManager
   ): Response {
     /** @var User $user */
     $user = $this->getUser();
     $subscription = $user->getSubscription();
+
     if (!$subscription) {
-      $this->addFlash('error', 'Vous n\'avez pas d\'abonnement à reprendre.');
+      $this->addFlash('error', 'Vous n\'avez pas d\'abonnement à réactiver.');
       return $this->redirectToRoute('app_subscription_manage');
     }
+
     // Validate CSRF token
     $token = new CsrfToken('resume_subscription', $request->request->get('_token'));
     if (!$csrfTokenManager->isTokenValid($token)) {
       throw $this->createAccessDeniedException('Invalid CSRF token.');
     }
-    $subscription->setStatus(SubscriptionStatus::ACTIVE);
-    $subscription->setAutoRenew(true);
-    $entityManager->persist($subscription);
-    $entityManager->flush();
 
-    $this->addFlash('success', 'Votre abonnement a été repris avec succès.');
+    try {
+      $this->subscriptionService->resumeSubscription($subscription);
+      $this->addFlash('success', 'Votre abonnement a été repris avec succès.');
+    } catch (InvalidSubscriptionStatusException $e) {
+      $this->addFlash('error', $e->getMessage());
+    }
 
     return $this->redirectToRoute('app_subscription_manage');
   }
