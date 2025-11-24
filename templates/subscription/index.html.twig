@@ -1,12 +1,11 @@
 {# filepath: templates/subscription/index.html.twig #}
 {% extends 'base.html.twig' %}
-
-{% block title %}Choisissez votre offre
+{% block title %}
+	Choisissez votre offre
 {% endblock %}
 
 {% block javascripts %}
-	{{ parent() }}
-	<script type="module" src="{{ asset('subscription.js') }}"></script>
+	{{ parent() }}<script type="module" src="{{ asset('subscription.js') }}"></script>
 {% endblock %}
 
 {% block body %}
@@ -35,7 +34,16 @@
 		{% if userPlan %}
 			<div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-6" role="alert">
 				<span class="block sm:inline">Vous êtes actuellement abonné au plan
-					<strong>{{ userPlan.name }}</strong>.</span>
+					<strong>
+						{{ userPlan.name }}
+						{% if userSubscription.billingPeriod == 'annual' %}
+							annuel
+						{% else %}
+							mensuel
+						{%- endif -%}
+					</strong>.
+				</span>
+
 			</div>
 		{% endif %}
 

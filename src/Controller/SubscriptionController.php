@@ -36,6 +36,7 @@ final class SubscriptionController extends AbstractController
     return $this->render('subscription/index.html.twig', [
       'plans' => $plans,
       'userPlan' => $userPlan,
+      'userSubscription' => $user ? $user->getSubscription() : null,
     ]);
   }
 
