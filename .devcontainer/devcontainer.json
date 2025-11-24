@@ -15,6 +15,13 @@
 	],
 	"features": {
 		"ghcr.io/shyim/devcontainers-features/symfony-cli:0": {}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"mblode.twig-language"
+			]
+		}
 	}
 	// Use 'postCreateCommand' to run commands after the container is created.
 	// "postCreateCommand": "sudo chmod a+x \"$(pwd)\" && sudo rm -rf /var/www/html && sudo ln -s \"$(pwd)\" /var/www/html"
