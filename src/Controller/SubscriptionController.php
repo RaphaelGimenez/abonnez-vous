@@ -40,7 +40,7 @@ final class SubscriptionController extends AbstractController
     ]);
   }
 
-  #[Route('/subscription/subscribe/{id}', name: 'app_subscription_subscribe', methods: ['POST'])]
+  #[Route('/subscription/subscribe/plan/{id}', name: 'app_subscription_subscribe', methods: ['POST'])]
   #[IsGranted('IS_AUTHENTICATED_FULLY')]
   public function subscribe(
     PlanRepository $planRepository,
