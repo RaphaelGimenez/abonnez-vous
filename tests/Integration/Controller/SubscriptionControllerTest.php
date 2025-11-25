@@ -205,8 +205,6 @@ class SubscriptionControllerTest extends WebTestCase
 	 */
 	public function testManageActionRequiresCsrfToken(
 		string $action,
-		string $method,
-		int $expectedErrorStatus
 	): void {
 		// Arrange
 		$user = $this->createAuthenticatedUser();
@@ -218,10 +216,10 @@ class SubscriptionControllerTest extends WebTestCase
 		]);
 
 		// Act - submit with wrong method
-		$this->client->request($method, '/subscription/' . $action);
+		$this->client->request('POST', '/subscription/' . $action);
 
 		// Assert
-		$this->assertResponseStatusCodeSame($expectedErrorStatus);
+		$this->assertResponseStatusCodeSame(403);
 		$this->assertHasSubscription($user, $plan, SubscriptionStatus::ACTIVE);
 	}
 
@@ -230,11 +228,9 @@ class SubscriptionControllerTest extends WebTestCase
 	 */
 	public function testManageActionRequiresAuthentication(
 		string $action,
-		string $method,
-		int $expectedErrorStatus
 	): void {
 		// Act
-		$this->client->request($method, '/subscription/' . $action);
+		$this->client->request('POST', '/subscription/' . $action);
 		// Assert -> redirected to login
 		$this->assertResponseRedirects('/login', 302);
 	}
@@ -244,17 +240,15 @@ class SubscriptionControllerTest extends WebTestCase
 	 */
 	public function testManageActionRequiresSubscription(
 		string $action,
-		string $method,
-		int $expectedErrorStatus
 	): void {
 		// Arrange
 		$this->createAuthenticatedUser();
 
 		// Act
-		$this->client->request($method, '/subscription/' . $action);
+		$this->client->request('POST', '/subscription/' . $action);
 
 		// Assert
-		$this->assertResponseStatusCodeSame($expectedErrorStatus);
+		$this->assertResponseStatusCodeSame(403);
 	}
 
 
@@ -356,13 +350,9 @@ class SubscriptionControllerTest extends WebTestCase
 		return [
 			'cancel_via_POST' => [
 				'action' => 'cancel',
-				'method' => 'POST',
-				'expectedErrorStatus' => 403,
 			],
 			'renew_via_POST' => [
 				'action' => 'renew',
-				'method' => 'POST',
-				'expectedErrorStatus' => 403,
 			],
 		];
 	}
