@@ -1,5 +1,5 @@
 {# filepath: templates/subscription/index.html.twig #}
-{% SubscriptionStatus = enum('App\\Enum\\SubscriptionStatus') %}
+{% BillingPeriod = enum('App\\Enum\\BillingPeriod') %}
 {% extends 'base.html.twig' %}
 {% block title %}
 	Choisissez votre offre
@@ -37,7 +37,7 @@
 				<span class="block sm:inline">Vous êtes actuellement abonné au plan
 					<strong>
 						{{ userPlan.name }}
-						{% if userSubscription.billingPeriod == SubscriptionStatus::YEARLY %}
+						{% if userSubscription.billingPeriod == BillingPeriod::YEARLY %}
 							annuel
 						{% else %}
 							mensuel
@@ -54,7 +54,7 @@
 				<button id="monthlyBtn" class="px-6 py-2 rounded-md bg-white shadow-sm font-semibold text-cyan-600 transition duration-200" role="tab" aria-selected="true" aria-controls="pricing-panel">
 					Mensuel
 				</button>
-				<button id="annualBtn" class="px-6 py-2 rounded-md font-semibold text-gray-600 transition duration-200" role="tab" aria-selected="false" aria-controls="pricing-panel">
+				<button id="yearlyBtn" class="px-6 py-2 rounded-md font-semibold text-gray-600 transition duration-200" role="tab" aria-selected="false" aria-controls="pricing-panel">
 					Annuel
 				</button>
 			</div>
@@ -70,11 +70,11 @@
 					<div class="text-center py-8">
 						<h2 class="text-2xl font-bold text-gray-800">
 							<span class="price-monthly">{{ plan.monthlyPrice }}€</span>
-							<span class="price-annual hidden">{{ plan.annualPrice }}€</span>
+							<span class="price-yearly hidden">{{ plan.yearlyPrice }}€</span>
 						</h2>
 						<p class="text-gray-600 mt-2">
 							<span class="price-monthly">par mois</span>
-							<span class="price-annual hidden">par an</span>
+							<span class="price-yearly hidden">par an</span>
 						</p>
 					</div>
 					<div class="bg-transparent text-center pb-6 px-4">

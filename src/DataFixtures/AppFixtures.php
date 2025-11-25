@@ -22,12 +22,12 @@ class AppFixtures extends Fixture
 			[
 				'name' => 'Tarif normal',
 				'monthlyPrice' => 12,
-				'annualPrice' => 120,
+				'yearlyPrice' => 120,
 			],
 			[
 				'name' => 'Tarif soutien',
 				'monthlyPrice' => 16,
-				'annualPrice' => 160,
+				'yearlyPrice' => 160,
 			],
 		];
 
@@ -35,7 +35,7 @@ class AppFixtures extends Fixture
 			$plan = new Plan();
 			$plan->setName($planData['name']);
 			$plan->setMonthlyPrice($planData['monthlyPrice']);
-			$plan->setAnnualPrice($planData['annualPrice']);
+			$plan->setyearlyPrice($planData['yearlyPrice']);
 
 			$manager->persist($plan);
 		}

@@ -24,7 +24,7 @@ class Plan
 	private ?int $monthlyPrice = null;
 
 	#[ORM\Column]
-	private ?int $annualPrice = null;
+	private ?int $yearlyPrice = null;
 
 	public function getId(): ?int
 	{
@@ -55,14 +55,14 @@ class Plan
 		return $this;
 	}
 
-	public function getAnnualPrice(): ?int
+	public function getyearlyPrice(): ?int
 	{
-		return $this->annualPrice;
+		return $this->yearlyPrice;
 	}
 
-	public function setAnnualPrice(int $annualPrice): static
+	public function setyearlyPrice(int $yearlyPrice): static
 	{
-		$this->annualPrice = $annualPrice;
+		$this->yearlyPrice = $yearlyPrice;
 
 		return $this;
 	}
