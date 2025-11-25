@@ -39,11 +39,15 @@
 			<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-6" role="alert">
 				<span class="block sm:inline">Vous pouvez annuler votre abonnement à tout moment. En l'annulant, vous conserverez l'accès à votre plan actuel jusqu'à la fin de la période de facturation en cours.</span>
 			</div>
+		{% elseif subscription.status == SubscriptionStatus.RENEWING %}
+			<div class="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded relative mb-6" role="alert">
+				<span class="block sm:inline">Votre abonnement a été renouvelé et reprendra automatiquement à la fin de la période en cours.</span>
+			</div>
 		{% endif %}
 
 
-		{% if subscription.status == SubscriptionStatus.ACTIVE %}
-			<form method="post" action="{{ path('app_subscription_cancel') }}">
+		{% if subscription.status == SubscriptionStatus.ACTIVE or subscription.status == SubscriptionStatus.RENEWING %}
+			<form method="post" action="{{ path('app_subscription_cancel') }}" data-testid="cancel-subscription-form">
 				<input type="hidden" name="_token" value="{{ csrf_token('cancel_subscription') }}">
 
 				<button type="submit" {% if subscription.status == SubscriptionStatus.CANCELED %} disabled {% endif %} class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">
@@ -53,7 +57,7 @@
 		{% endif %}
 
 		{% if subscription.status == SubscriptionStatus.CANCELED %}
-			<form method="post" action="{{ path('app_subscription_renew') }}" class="mt-4">
+			<form method="post" action="{{ path('app_subscription_renew') }}" class="mt-4" data-testid="renew-subscription-form">
 				<input type="hidden" name="_token" value="{{ csrf_token('renew_subscription') }}">
 
 				<button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
