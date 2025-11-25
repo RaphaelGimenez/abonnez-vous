@@ -22,7 +22,7 @@ final class SubscriptionController extends AbstractController
 {
 	public function __construct(private SubscriptionService $subscriptionService) {}
 
-	#[Route('/subscription/subscribe', name: 'app_subscription')]
+	#[Route('/subscription/subscribe', name: 'app_subscription', methods: ['GET'])]
 	public function index(PlanRepository $planRepository): Response
 	{
 		$plans = $planRepository->findAll();
@@ -59,7 +59,7 @@ final class SubscriptionController extends AbstractController
 	}
 
 
-	#[Route('/subscription/subscribe/plan/{id}', name: 'app_subscription_subscribe', methods: ['POST'])]
+	#[Route('/subscription/subscribe', name: 'app_subscription_subscribe', methods: ['POST'])]
 	#[IsGranted('IS_AUTHENTICATED_FULLY')]
 	public function subscribe(
 		PlanRepository $planRepository,
@@ -68,7 +68,7 @@ final class SubscriptionController extends AbstractController
 	): Response {
 		/** @var User $user */
 		$user = $this->getUser();
-		$planId = $request->attributes->get('id');
+		$planId = $request->request->get('plan_id');
 
 		// Validate CSRF token
 		$token = new CsrfToken('subscribe' . $planId, $request->request->get('_token'));

@@ -51,10 +51,10 @@ class SubscriptionControllerTest extends WebTestCase
 	public function testSubscribeRequiresAuthentication(): void
 	{
 		// Arrange
-		$plan =	PlanFactory::createOne();
+		PlanFactory::createOne();
 
 		// Act
-		$this->client->request('POST', '/subscription/subscribe/plan/' . $plan->getId());
+		$this->client->request('POST', '/subscription/subscribe');
 
 		// Assert
 		$this->assertResponseRedirects('/login', 302);
@@ -119,7 +119,7 @@ class SubscriptionControllerTest extends WebTestCase
 		$plan = PlanFactory::createOne();
 
 		// Act - submit without CSRF token
-		$this->client->request('POST', '/subscription/subscribe/plan/' . $plan->getId(), [
+		$this->client->request('POST', '/subscription/subscribe', [
 			'billing_period' => 'monthly',
 			'id' => $plan->getId(),
 		]);
@@ -136,9 +136,9 @@ class SubscriptionControllerTest extends WebTestCase
 		$plan = PlanFactory::createOne();
 
 		// Act - submit with invalid CSRF token
-		$this->client->request('POST', '/subscription/subscribe/plan/' . $plan->getId(), [
+		$this->client->request('POST', '/subscription/subscribe', [
 			'billing_period' => 'monthly',
-			'id' => $plan->getId(),
+			'plan_id' => $plan->getId(),
 			'_token' => 'invalid_token_value',
 		]);
 

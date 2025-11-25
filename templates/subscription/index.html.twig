@@ -79,8 +79,9 @@
 						</p>
 					</div>
 					<div class="bg-transparent text-center pb-6 px-4">
-						<form method="post" action="{{ path('app_subscription_subscribe', {id: plan.id}) }}" class="subscription-form" data-testid="subscription-form-{{ plan.id }}">
+						<form method="post" action="{{ path('app_subscription_subscribe') }}" class="subscription-form" data-testid="subscription-form-{{ plan.id }}">
 							<input type="hidden" name="_token" value="{{ csrf_token('subscribe' ~ plan.id) }}">
+							<input type="hidden" name="plan_id" value="{{ plan.id }}" readonly>
 							<input type="hidden" name="billing_period" value="monthly" class="billing-period-input">
 							<button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-3 px-6 rounded-lg transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" {% if userPlan %} disabled {% endif %}>
 								Je m'abonne
