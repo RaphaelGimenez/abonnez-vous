@@ -191,6 +191,15 @@ class SubscriptionControllerTest extends WebTestCase
 		$this->assertSelectorExists('[data-testid="flash-error"]');
 	}
 
+	public function testManageRequiresAuthentication(): void
+	{
+		// Act
+		$this->client->request('GET', '/subscription/manage');
+
+		// Assert
+		$this->assertResponseRedirects('/login', 302);
+	}
+
 	/**
 	 * Utils
 	 */
