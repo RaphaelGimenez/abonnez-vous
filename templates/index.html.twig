@@ -1,0 +1,50 @@
+{% set BillingPeriod = enum('App\\Enum\\SubscriptionBillingPeriod') %}
+{% extends 'base.html.twig' %}
+
+{% block title %}Bonjour MainController!
+{% endblock %}
+
+{% block body %}
+
+	<div class="container max-w-4xl mx-auto px-4 py-8">
+		{% if user %}
+			<h1 class="text-3xl font-bold text-gray-800 mb-4">Bienvenue,
+				{{ user.email }}!</h1>
+			{% if currentSubscription %}
+				<div class="bg-white border rounded-lg p-6 mb-4" data-testid="subscription-info">
+					<p class="text-lg text-gray-700 mb-4">Votre abonnement actuel :
+						<span class="font-semibold text-cyan-600">{{ currentPlan.name }}
+							{% if currentSubscription.billingPeriod == BillingPeriod.YEARLY %}
+								annuel
+							{% else %}
+								mensuel
+							{%- endif -%}
+						</span>
+
+					</p>
+					{% if currentSubscription.isAutoRenew %}
+						<p class="text-green-600 mb-4">Votre abonnement sera renouvelé automatiquement le
+							<span class="font-medium">{{ currentSubscription.endDate|date('Y-m-d') }}</span>.</p>
+					{% else %}
+						<p class="text-red-600 mb-4">Votre abonnement ne sera pas renouvelé et prendra fin le
+							<span class="font-medium">{{ currentSubscription.endDate|date('Y-m-d') }}</span>.</p>
+					{% endif %}
+					<a href="{{ path('app_subscription_manage') }}" class="inline-block bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded transition duration-200">Gérer mon abonnement</a>
+				</div>
+			{% else %}
+				<div class="bg-yellow-50 border-l-4 border-yellow-400 p-6 mb-4">
+					<p class="text-gray-700 mb-4">Vous n'êtes pas encore abonné.</p>
+					<a href="{{ path('app_subscription') }}" class="inline-block bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded transition duration-200">Abonnez-vous</a>
+				</div>
+			{% endif %}
+			<a href="{{ path('app_logout') }}" class="inline-block mt-4 bg-stone-500 hover:bg-stone-600 text-white font-semibold py-2 px-4 rounded transition duration-200">Déconnexion</a>
+
+		{% else %}
+			<div class="text-center max-w-md mx-auto bg-white rounded-lg p-8">
+				<h1 class="text-3xl font-bold text-gray-800 mb-4">Bienvenue !</h1>
+				<p class="text-gray-600 mb-6">Veuillez vous connecter pour voir les détails de votre abonnement.</p>
+				<a href="{{ path('app_login') }}" class="inline-block bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-3 px-6 rounded-lg transition duration-200">Connexion</a>
+			</div>
+		{% endif %}
+	</div>
+{% endblock %}

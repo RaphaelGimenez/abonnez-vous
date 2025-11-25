@@ -74,7 +74,7 @@ class SubscriptionControllerTest extends WebTestCase
 		$this->client->followRedirect();
 
 		// Assert
-		$this->assertSelectorExists('[data-testid="flash-success"]');
+		$this->assertSelectorExists('[data-testid="subscription-info"]');
 		$this->assertHasSubscription($user, $plan, SubscriptionStatus::ACTIVE);
 	}
 

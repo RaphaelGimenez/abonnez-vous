@@ -93,11 +93,11 @@ final class SubscriptionController extends AbstractController
 		try {
 			$this->subscriptionService->createSubscription($user, $plan, $billingPeriod);
 			$this->addFlash('success', 'Vous vous êtes abonné avec succès au plan ' . $plan->getName() . '.');
+			return $this->redirectToRoute('app_main');
 		} catch (AlreadySubscribedException $e) {
 			$this->addFlash('error', $e->getMessage());
+			return $this->redirectToRoute('app_subscription');
 		}
-
-		return $this->redirectToRoute('app_subscription');
 	}
 
 	#[Route('/subscription/cancel', name: 'app_subscription_cancel', methods: ['POST'])]
@@ -122,7 +122,6 @@ final class SubscriptionController extends AbstractController
 
 		try {
 			$this->subscriptionService->cancelSubscription($subscription);
-			$this->addFlash('success', 'Votre abonnement a été annulé avec succès.');
 		} catch (InvalidSubscriptionStatusException $e) {
 			$this->addFlash('error', $e->getMessage());
 		}

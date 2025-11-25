@@ -10,6 +10,8 @@
 
 {% block body %}
 	<div class="container mx-auto my-12 px-4 max-w-4xl">
+		<a href="{{ path('app_main') }}" class="inline-block mb-6 text-cyan-600 hover:text-cyan-800 font-semibold">&larr; Retour à l'accueil</a>
+
 		<h1 class="text-4xl font-bold text-center mb-12 uppercase">Gérez votre abonnement</h1>
 
 		{% for message in app.flashes('success') %}
