@@ -111,8 +111,7 @@ final class SubscriptionController extends AbstractController
 		$subscription = $user->getSubscription();
 
 		if (!$subscription) {
-			$this->addFlash('error', 'Vous n\'avez pas d\'abonnement actif à annuler.');
-			return $this->redirectToRoute('app_subscription_manage');
+			throw $this->createAccessDeniedException('You do not have a subscription to cancel.');
 		}
 
 		// Validate CSRF token
@@ -142,8 +141,7 @@ final class SubscriptionController extends AbstractController
 		$subscription = $user->getSubscription();
 
 		if (!$subscription) {
-			$this->addFlash('error', 'Vous n\'avez pas d\'abonnement à réactiver.');
-			return $this->redirectToRoute('app_subscription_manage');
+			throw $this->createAccessDeniedException('You do not have a subscription to renew.');
 		}
 
 		// Validate CSRF token

@@ -225,6 +225,38 @@ class SubscriptionControllerTest extends WebTestCase
 		$this->assertHasSubscription($user, $plan, SubscriptionStatus::ACTIVE);
 	}
 
+	/**
+	 * @dataProvider subscriptionActionMethodProvider
+	 */
+	public function testManageActionRequiresAuthentication(
+		string $action,
+		string $method,
+		int $expectedErrorStatus
+	): void {
+		// Act
+		$this->client->request($method, '/subscription/' . $action);
+		// Assert -> redirected to login
+		$this->assertResponseRedirects('/login', 302);
+	}
+
+	/**
+	 * @dataProvider subscriptionActionMethodProvider
+	 */
+	public function testManageActionRequiresSubscription(
+		string $action,
+		string $method,
+		int $expectedErrorStatus
+	): void {
+		// Arrange
+		$this->createAuthenticatedUser();
+
+		// Act
+		$this->client->request($method, '/subscription/' . $action);
+
+		// Assert
+		$this->assertResponseStatusCodeSame($expectedErrorStatus);
+	}
+
 
 	/**
 	 * Utils
