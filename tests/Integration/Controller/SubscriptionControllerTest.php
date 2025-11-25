@@ -24,6 +24,7 @@ class SubscriptionControllerTest extends WebTestCase
 	protected function setUp(): void
 	{
 		$this->client = static::createClient();
+		$this->client->enableProfiler();
 		$this->entityManager = $this->client->getContainer()
 			->get(EntityManagerInterface::class);
 	}
@@ -97,6 +98,53 @@ class SubscriptionControllerTest extends WebTestCase
 		$currentSubscription = $this->assertHasSubscription($user, $plan, SubscriptionStatus::ACTIVE);
 		$this->assertSame($originalSubscription->getId(), $currentSubscription->getId(), 'Should keep original subscription');
 		$this->assertSame(1, SubscriptionFactory::repository()->count(['user' => $user]), 'User should have exactly one subscription');
+	}
+
+	public function testSubscribeWithInvalidBillingPeriod(): void
+	{
+		$this->createAuthenticatedUser();
+		$plan = PlanFactory::createOne();
+
+		$this->submitSubscriptionForm($plan, 'invalid_period');
+		$this->client->followRedirect();
+
+		$this->assertSelectorExists('[data-testid="flash-error"]');
+		$this->assertSame(0, SubscriptionFactory::repository()->count(), 'No subscription should be created');
+	}
+
+	public function testSubscribeFormRejectsMissingCsrfToken(): void
+	{
+		// Arrange
+		$this->createAuthenticatedUser();
+		$plan = PlanFactory::createOne();
+
+		// Act - submit without CSRF token
+		$this->client->request('POST', '/subscription/subscribe/plan/' . $plan->getId(), [
+			'billing_period' => 'monthly',
+			'id' => $plan->getId(),
+		]);
+
+		// Assert
+		$this->assertResponseStatusCodeSame(403);
+		$this->assertSame(0, SubscriptionFactory::repository()->count(), 'No subscription should be created');
+	}
+
+	public function testSubscribeFormRejectsInvalidCsrfToken(): void
+	{
+		// Arrange
+		$this->createAuthenticatedUser();
+		$plan = PlanFactory::createOne();
+
+		// Act - submit with invalid CSRF token
+		$this->client->request('POST', '/subscription/subscribe/plan/' . $plan->getId(), [
+			'billing_period' => 'monthly',
+			'id' => $plan->getId(),
+			'_token' => 'invalid_token_value',
+		]);
+
+		// Assert
+		$this->assertResponseStatusCodeSame(403);
+		$this->assertSame(0, SubscriptionFactory::repository()->count(), 'No subscription should be created');
 	}
 
 	/**
