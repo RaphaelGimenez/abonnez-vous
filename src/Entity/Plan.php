@@ -55,12 +55,12 @@ class Plan
 		return $this;
 	}
 
-	public function getyearlyPrice(): ?int
+	public function getYearlyPrice(): ?int
 	{
 		return $this->yearlyPrice;
 	}
 
-	public function setyearlyPrice(int $yearlyPrice): static
+	public function setYearlyPrice(int $yearlyPrice): static
 	{
 		$this->yearlyPrice = $yearlyPrice;
 
