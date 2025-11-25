@@ -28,6 +28,10 @@ class SubscriptionControllerTest extends WebTestCase
 			->get(EntityManagerInterface::class);
 	}
 
+	/**
+	 * Test subscription
+	 */
+
 	public function testSubscribePageDisplaysPlans(): void
 	{
 		// Arrange
@@ -96,6 +100,10 @@ class SubscriptionControllerTest extends WebTestCase
 	}
 
 	/**
+	 * Test subscription management
+	 */
+
+	/**
 	 * @dataProvider subscriptionActionProvider
 	 */
 	public function testSubscriptionActions(
@@ -121,6 +129,23 @@ class SubscriptionControllerTest extends WebTestCase
 		$subscription = $this->assertHasSubscription($user, $plan, $expectedStatus);
 		$this->assertSame($expectedAutoRenew, $subscription->isAutoRenew());
 	}
+
+	public function testManageRedirectsWhenNoSubscription(): void
+	{
+		// Arrange
+		$this->createAuthenticatedUser();
+
+		// Act
+		$this->client->request('GET', '/subscription/manage');
+		$this->client->followRedirect();
+
+		// Assert
+		$this->assertSelectorExists('[data-testid="flash-error"]');
+	}
+
+	/**
+	 * Utils
+	 */
 
 	/**
 	 * Creates an authenticated user and logs them in.
