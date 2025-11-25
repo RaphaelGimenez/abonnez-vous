@@ -4,26 +4,46 @@
 {% endblock %}
 
 {% block body %}
-	<h1>Register</h1>
+	<div class="max-w-md mx-auto p-6">
+		<h1 class="text-3xl font-bold mb-6">Register</h1>
 
-	{{ form_errors(registrationForm) }}
+		{{ form_errors(registrationForm) }}
 
-	{{ form_start(registrationForm) }}
-	{{ form_row(registrationForm.email) }}
-	{{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }}
-	{{ form_row(registrationForm.agreeTerms) }}
+		{{ form_start(registrationForm, {
+    'attr': {'class': 'p-6'}
+  }) }}
+		{{ form_row(registrationForm.email, {
+    'attr': {
+      'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4',
+    },
+    }) }}
+		{{ form_row(registrationForm.plainPassword, {
+      label: 'Password',
+      'attr': {
+        'class': 'w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-cyan-500 mb-4',
+      },
+    }) }}
+		{{ form_row(registrationForm.agreeTerms, {
+      'attr': {
+        'class': 'mr-2',
+      },
+  }) }}
 
-	{% for message in app.flashes('error') %}
-		<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-			<span class="block sm:inline">{{ message }}</span>
-			<button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
-				<span class="text-2xl">&times;</span>
-			</button>
-		</div>
-	{% endfor %}
+		{% for message in app.flashes('error') %}
+			<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
+				<span class="block sm:inline">{{ message }}</span>
+				<button type="button" class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="this.parentElement.remove()">
+					<span class="text-2xl">&times;</span>
+				</button>
+			</div>
+		{% endfor %}
 
-	<button type="submit" class="btn">Register</button>
-	{{ form_end(registrationForm) }}
+		<button type="submit" class="w-full bg-cyan-600 hover:bg-cyan-700 text-white font-medium py-2 px-4 rounded text-lg mb-4">
+			Créer un compte
+		</button>
+
+		<a href="{{ path('app_login') }}" class="text-cyan-600 hover:underline">Déjà un compte ? Se connecter</a>
+
+		{{ form_end(registrationForm) }}
+	</div>
 {% endblock %}

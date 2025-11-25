@@ -28,6 +28,14 @@ class RegistrationController extends AbstractController
     $form->handleRequest($request);
 
     if ($form->isSubmitted() && $form->isValid()) {
+      $userRepository = $entityManager->getRepository(User::class);
+      $existingUser = $userRepository->findOneByEmail($form->get('email')->getData());
+
+      if ($existingUser) {
+        $this->addFlash('error', 'Une erreur est survenue lors de l\'inscription.');
+        return $this->redirectToRoute('app_register');
+      }
+
       /** @var string $plainPassword */
       $plainPassword = $form->get('plainPassword')->getData();
 
