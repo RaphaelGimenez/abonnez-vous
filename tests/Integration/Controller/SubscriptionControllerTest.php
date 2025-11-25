@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Controller;
+namespace App\Tests\Integration\Controller;
 
 use App\Entity\Plan;
 use App\Entity\Subscription;
