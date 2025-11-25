@@ -53,8 +53,8 @@
 		{% endif %}
 
 		{% if subscription.status == SubscriptionStatus.CANCELED %}
-			<form method="post" action="{{ path('app_subscription_resume') }}" class="mt-4">
-				<input type="hidden" name="_token" value="{{ csrf_token('resume_subscription') }}">
+			<form method="post" action="{{ path('app_subscription_renew') }}" class="mt-4">
+				<input type="hidden" name="_token" value="{{ csrf_token('renew_subscription') }}">
 
 				<button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
 					Reprendre mon abonnement

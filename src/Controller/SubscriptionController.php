@@ -131,9 +131,9 @@ final class SubscriptionController extends AbstractController
 		return $this->redirectToRoute('app_subscription_manage');
 	}
 
-	#[Route('/subscription/resume', name: 'app_subscription_resume', methods: ['POST'])]
+	#[Route('/subscription/renew', name: 'app_subscription_renew', methods: ['POST'])]
 	#[IsGranted('IS_AUTHENTICATED_FULLY')]
-	public function resume(
+	public function renew(
 		Request $request,
 		CsrfTokenManagerInterface $csrfTokenManager
 	): Response {
@@ -147,13 +147,13 @@ final class SubscriptionController extends AbstractController
 		}
 
 		// Validate CSRF token
-		$token = new CsrfToken('resume_subscription', $request->request->get('_token'));
+		$token = new CsrfToken('renew_subscription', $request->request->get('_token'));
 		if (!$csrfTokenManager->isTokenValid($token)) {
 			throw $this->createAccessDeniedException('Invalid CSRF token.');
 		}
 
 		try {
-			$this->subscriptionService->resumeSubscription($subscription);
+			$this->subscriptionService->renewSubscription($subscription);
 			$this->addFlash('success', 'Votre abonnement a été repris avec succès.');
 		} catch (InvalidSubscriptionStatusException $e) {
 			$this->addFlash('error', $e->getMessage());

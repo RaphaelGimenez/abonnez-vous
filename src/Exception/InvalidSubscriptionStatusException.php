@@ -9,7 +9,7 @@ class InvalidSubscriptionStatusException extends SubscriptionException
 	public function __construct(SubscriptionStatus $current, string $action)
 	{
 		parent::__construct(
-			sprintf('Impossible de %s un abonnement avec le statut %s', $action, $current->value)
+			sprintf('Can\'t %s already %s subscription', $action, $current->value)
 		);
 	}
 }

@@ -46,11 +46,15 @@ class SubscriptionService
 	 * Cancels an active subscription.
 	 *
 	 * @throws InvalidSubscriptionStatusException if subscription is already canceled
+	 * @throws InvalidSubscriptionStatusException if subscription is expired
 	 */
 	public function cancelSubscription(Subscription $subscription): void
 	{
 		if ($subscription->getStatus() === SubscriptionStatus::CANCELED) {
-			throw new InvalidSubscriptionStatusException($subscription->getStatus(), 'annuler');
+			throw new InvalidSubscriptionStatusException($subscription->getStatus(), 'cancel');
+		}
+		if ($subscription->getStatus() === SubscriptionStatus::EXPIRED) {
+			throw new InvalidSubscriptionStatusException($subscription->getStatus(), 'cancel');
 		}
 
 		$subscription->setStatus(SubscriptionStatus::CANCELED);
@@ -60,17 +64,17 @@ class SubscriptionService
 	}
 
 	/**
-	 * Resumes a canceled subscription.
+	 * Renews a canceled subscription.
 	 *
 	 * @throws InvalidSubscriptionStatusException if subscription is not canceled
 	 */
-	public function resumeSubscription(Subscription $subscription): void
+	public function renewSubscription(Subscription $subscription): void
 	{
 		if ($subscription->getStatus() !== SubscriptionStatus::CANCELED) {
-			throw new InvalidSubscriptionStatusException($subscription->getStatus(), 'réactiver');
+			throw new InvalidSubscriptionStatusException($subscription->getStatus(), 'renew');
 		}
 
-		$subscription->setStatus(SubscriptionStatus::ACTIVE);
+		$subscription->setStatus(SubscriptionStatus::RENEWING);
 		$subscription->setAutoRenew(true);
 
 		$this->entityManager->flush();
