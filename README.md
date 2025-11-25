@@ -41,7 +41,11 @@ Le projet utilise Sqlite comme base de données pour simplifier la configuration
 	 ```bash
 	 symfony serve
 	 ```
-6. Accéder à l'application via `http://localhost:8000` dans votre navigateur.
+6. Lancer le builder de styles Tailwind CSS :
+	 ```bash
+	 php bin/console tailwind:build --watch
+	 ```
+7. Accéder à l'application via `http://localhost:8000` dans votre navigateur.
 
 ## Fonctionnalités
 
