@@ -65,7 +65,7 @@ class SecurityController extends AbstractController
 			$entityManager->persist($user);
 			$entityManager->flush();
 
-			return $this->redirectToRoute('app_hello_greet');
+			return $this->redirectToRoute('app_subscription');
 		}
 
 		return $this->render('registration/register.html.twig', [
