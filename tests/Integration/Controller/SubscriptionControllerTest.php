@@ -201,6 +201,32 @@ class SubscriptionControllerTest extends WebTestCase
 	}
 
 	/**
+	 * @dataProvider subscriptionActionMethodProvider
+	 */
+	public function testManageActionRequiresCsrfToken(
+		string $action,
+		string $method,
+		int $expectedErrorStatus
+	): void {
+		// Arrange
+		$user = $this->createAuthenticatedUser();
+		$plan = PlanFactory::createOne();
+		SubscriptionFactory::createOne([
+			'user' => $user,
+			'plan' => $plan,
+			'status' => SubscriptionStatus::ACTIVE,
+		]);
+
+		// Act - submit with wrong method
+		$this->client->request($method, '/subscription/' . $action);
+
+		// Assert
+		$this->assertResponseStatusCodeSame($expectedErrorStatus);
+		$this->assertHasSubscription($user, $plan, SubscriptionStatus::ACTIVE);
+	}
+
+
+	/**
 	 * Utils
 	 */
 
@@ -289,6 +315,22 @@ class SubscriptionControllerTest extends WebTestCase
 				'initialStatus' => SubscriptionStatus::CANCELED,
 				'expectedStatus' => SubscriptionStatus::RENEWING,
 				'expectedAutoRenew' => true
+			],
+		];
+	}
+
+	public static function subscriptionActionMethodProvider(): array
+	{
+		return [
+			'cancel_via_POST' => [
+				'action' => 'cancel',
+				'method' => 'POST',
+				'expectedErrorStatus' => 403,
+			],
+			'renew_via_POST' => [
+				'action' => 'renew',
+				'method' => 'POST',
+				'expectedErrorStatus' => 403,
 			],
 		];
 	}
