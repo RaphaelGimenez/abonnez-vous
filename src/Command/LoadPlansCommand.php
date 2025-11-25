@@ -12,24 +12,24 @@ use Symfony\Component\Console\Output\OutputInterface;
 #[AsCommand(name: 'app:load-plans')]
 class LoadPlansCommand extends Command
 {
-  public function __construct(
-    private EntityManagerInterface $em,
-    private AppFixtures $fixtures
-  ) {
-    parent::__construct();
-  }
+	public function __construct(
+		private EntityManagerInterface $em,
+		private AppFixtures $fixtures
+	) {
+		parent::__construct();
+	}
 
-  protected function execute(InputInterface $input, OutputInterface $output): int
-  {
-    $count = $this->em->getRepository(\App\Entity\Plan::class)->count([]);
+	protected function execute(InputInterface $input, OutputInterface $output): int
+	{
+		$count = $this->em->getRepository(\App\Entity\Plan::class)->count([]);
 
-    if ($count === 0) {
-      $this->fixtures->load($this->em);
-      $output->writeln('<info>Plans table populated.</info>');
-    } else {
-      $output->writeln('<comment>Plans table already has data.</comment>');
-    }
+		if ($count === 0) {
+			$this->fixtures->load($this->em);
+			$output->writeln('<info>Plans table populated.</info>');
+		} else {
+			$output->writeln('<comment>Plans table already has data.</comment>');
+		}
 
-    return Command::SUCCESS;
-  }
+		return Command::SUCCESS;
+	}
 }
