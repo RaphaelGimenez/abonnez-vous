@@ -41,7 +41,13 @@ class StripeServiceTest extends TestCase
 		$this->checkoutServiceMock->sessions = $this->sessionServiceMock;
 		$this->stripeClient->customers = $this->customerServiceMock;
 
-		$this->service = new StripeService($this->stripeClient, $this->entityManager);
+		$this->service = new StripeService(
+			$this->stripeClient,
+			$this->entityManager,
+			$this->createMock(\App\Repository\UserRepository::class),
+			$this->createMock(\App\Repository\PlanRepository::class),
+			$this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface::class)
+		);
 	}
 
 	public function testCreateCheckoutSessionReturnsStripeUrl(): void
@@ -225,6 +231,36 @@ class StripeServiceTest extends TestCase
 			$user,
 			$plan,
 			SubscriptionBillingPeriod::MONTHLY
+		);
+	}
+
+	public function testCreateCheckoutSessionAddsMetadata(): void
+	{
+		// Arrange
+		$user = new User();
+		$user->setEmail('test@example.com');
+		$user->setStripeCustomerId('cus_12345');
+		$plan = new Plan();
+		$plan->setStripeMonthlyLookupKey('monthly_plan_123');
+		$billingPeriod = SubscriptionBillingPeriod::MONTHLY;
+		$this->priceServiceMock->expects($this->once())
+			->method('all')
+			->willReturn((object) ['data' => [(object) ['id' => 'price_12345']]]);
+		$this->sessionServiceMock->expects($this->once())
+			->method('create')
+			->with($this->callback(function ($params) use ($plan, $billingPeriod) {
+				return isset($params['metadata'])
+					&& $params['metadata']['planId'] === $plan->getId()
+					&& $params['metadata']['billingPeriod'] === $billingPeriod->value;
+			}))
+			->willReturn(Session::constructFrom([]));
+
+
+		// Act
+		$this->service->createCheckoutSession(
+			$user,
+			$plan,
+			$billingPeriod
 		);
 	}
 

@@ -11,20 +11,24 @@ use App\Repository\PlanRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Stripe\StripeClient;
+use Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface;
 
 class StripeService
 {
 	private StripeClient $stripeClient;
 	private EntityManagerInterface $entityManager;
+	private $params;
 
 	public function __construct(
 		StripeClient $stripeClient,
 		EntityManagerInterface $entityManager,
 		private UserRepository $userRepository,
-		private PlanRepository $planRepository
+		private PlanRepository $planRepository,
+		ContainerBagInterface $params
 	) {
 		$this->stripeClient = $stripeClient;
 		$this->entityManager = $entityManager;
+		$this->params = $params;
 	}
 
 	/**
@@ -70,6 +74,10 @@ class StripeService
 				'price' => $prices->data[0]->id,
 				'quantity' => 1,
 			]],
+			'metadata' => [
+				'planId' => $plan->getId(),
+				'billingPeriod' => $billingPeriod->value,
+			],
 			'success_url' =>  'http://localhost:8000/subscription/success',
 			'cancel_url' =>  'http://localhost:8000/subscription/cancel',
 		]);
@@ -98,7 +106,7 @@ class StripeService
 
 	public function verifyWebhookSignature(string $payload, string $signature): \Stripe\Event
 	{
-		$webhookSecret = getenv('STRIPE_WEBHOOK_SECRET');
+		$webhookSecret = $this->params->get('stripe.webhook_secret');
 		return \Stripe\Webhook::constructEvent(
 			$payload,
 			$signature,
