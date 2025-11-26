@@ -33,10 +33,10 @@
 		{% endfor %}
 
 		{% if subscription.status == SubscriptionStatus.CANCELED %}
-			<div class="bg-orange-100 border border-orange-400 text-orange-700 px-4 py-3 rounded relative mb-6" role="alert">
-				<span class="block sm:inline">Votre abonnement n'est plus actif et prendra fin le
-					{{ subscription.endDate ? subscription.endDate|date('d/m/Y') : '' }}.</span>
-			</div>
+			{# <div class="bg-orange-100 border border-orange-400 text-orange-700 px-4 py-3 rounded relative mb-6" role="alert">
+							<span class="block sm:inline">Votre abonnement n'est plus actif et prendra fin le
+								{{ subscription.endDate ? subscription.endDate|date('d/m/Y') : '' }}.</span>
+						</div> #}
 		{% elseif subscription.status == SubscriptionStatus.ACTIVE %}
 			<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative mb-6" role="alert">
 				<span class="block sm:inline">Vous pouvez annuler votre abonnement à tout moment. En l'annulant, vous conserverez l'accès à votre plan actuel jusqu'à la fin de la période de facturation en cours.</span>

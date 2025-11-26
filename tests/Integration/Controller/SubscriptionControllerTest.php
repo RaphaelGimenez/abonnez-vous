@@ -155,8 +155,7 @@ class SubscriptionControllerTest extends WebTestCase
 	public function testSubscriptionActions(
 		string $action,
 		SubscriptionStatus $initialStatus,
-		SubscriptionStatus $expectedStatus,
-		bool $expectedAutoRenew
+		SubscriptionStatus $expectedStatus
 	): void {
 		// Arrange
 		$user = $this->createAuthenticatedUser();
@@ -173,7 +172,6 @@ class SubscriptionControllerTest extends WebTestCase
 
 		// Assert
 		$subscription = $this->assertHasSubscription($user, $plan, $expectedStatus);
-		$this->assertSame($expectedAutoRenew, $subscription->isAutoRenew());
 	}
 
 	public function testManageRedirectsWhenNoSubscription(): void
@@ -326,19 +324,16 @@ class SubscriptionControllerTest extends WebTestCase
 				'action' => 'cancel',
 				'initialStatus' => SubscriptionStatus::ACTIVE,
 				'expectedStatus' => SubscriptionStatus::CANCELED,
-				'expectedAutoRenew' => false
 			],
 			'cancel_renewing_subscription' => [
 				'action' => 'cancel',
 				'initialStatus' => SubscriptionStatus::RENEWING,
 				'expectedStatus' => SubscriptionStatus::CANCELED,
-				'expectedAutoRenew' => false
 			],
 			'renew_canceled_subscription' => [
 				'action' => 'renew',
 				'initialStatus' => SubscriptionStatus::CANCELED,
 				'expectedStatus' => SubscriptionStatus::RENEWING,
-				'expectedAutoRenew' => true
 			],
 		];
 	}

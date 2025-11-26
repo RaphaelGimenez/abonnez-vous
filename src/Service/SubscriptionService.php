@@ -32,9 +32,6 @@ class SubscriptionService
 		$subscription->setPlan($plan);
 		$subscription->setStatus(SubscriptionStatus::ACTIVE);
 		$subscription->setBillingPeriod($billingPeriod);
-		$subscription->setStartDate(new \DateTimeImmutable());
-		$subscription->setEndDate($this->calculateEndDate($subscription->getStartDate(), $billingPeriod));
-		$subscription->setAutoRenew(true);
 
 		$this->entityManager->persist($subscription);
 		$this->entityManager->flush();
@@ -58,7 +55,6 @@ class SubscriptionService
 		}
 
 		$subscription->setStatus(SubscriptionStatus::CANCELED);
-		$subscription->setAutoRenew(false);
 
 		$this->entityManager->flush();
 	}
@@ -75,7 +71,6 @@ class SubscriptionService
 		}
 
 		$subscription->setStatus(SubscriptionStatus::RENEWING);
-		$subscription->setAutoRenew(true);
 
 		$this->entityManager->flush();
 	}
@@ -89,15 +84,5 @@ class SubscriptionService
 		if ($subscription && $subscription->getStatus() === SubscriptionStatus::ACTIVE) {
 			throw new AlreadySubscribedException();
 		}
-	}
-
-	private function calculateEndDate(
-		\DateTimeImmutable $start,
-		SubscriptionBillingPeriod $billingPeriod
-	): \DateTimeImmutable {
-		return match ($billingPeriod) {
-			SubscriptionBillingPeriod::MONTHLY => $start->modify('+1 month'),
-			SubscriptionBillingPeriod::YEARLY => $start->modify('+1 year'),
-		};
 	}
 }

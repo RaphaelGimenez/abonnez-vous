@@ -32,7 +32,6 @@ class SubscriptionServiceTest extends TestCase
 		$subscription->setStatus($status);
 		$this->subscriptionService->cancelSubscription($subscription);
 		$this->assertSame(SubscriptionStatus::CANCELED, $subscription->getStatus(), 'Status should be CANCELED after cancellation');
-		$this->assertFalse($subscription->isAutoRenew(), 'Auto-renew should be disabled after cancellation');
 	}
 
 	/**
@@ -57,7 +56,6 @@ class SubscriptionServiceTest extends TestCase
 		$subscription->setStatus(SubscriptionStatus::CANCELED);
 		$this->subscriptionService->renewSubscription($subscription);
 		$this->assertSame(SubscriptionStatus::RENEWING, $subscription->getStatus(), 'Status should be RENEWING after renewal');
-		$this->assertTrue($subscription->isAutoRenew(), 'Auto-renew should be enabled after renewal');
 	}
 
 	/**
@@ -102,24 +100,6 @@ class SubscriptionServiceTest extends TestCase
 		$this->assertSame($plan, $subscription->getPlan());
 		$this->assertSame(SubscriptionStatus::ACTIVE, $subscription->getStatus());
 		$this->assertSame($billingPeriod, $subscription->getBillingPeriod());
-		$this->assertInstanceOf(\DateTimeImmutable::class, $subscription->getStartDate());
-		$this->assertInstanceOf(\DateTimeImmutable::class, $subscription->getEndDate());
-		$this->assertTrue($subscription->isAutoRenew());
-	}
-
-	/**
-	 * @dataProvider billingPeriodProvider
-	 */
-	public function testCreateSubscriptionShouldSetEndDateCorrectly(SubscriptionBillingPeriod $billingPeriod, string $expectedModification): void
-	{
-		$user = $this->createMock(User::class);
-		$user->method('getSubscription')->willReturn(null);
-
-		$plan = $this->createMock(Plan::class);
-
-		$subscription = $this->subscriptionService->createSubscription($user, $plan, $billingPeriod);
-		$expectedEndDate = $subscription->getStartDate()->modify($expectedModification);
-		$this->assertEquals($expectedEndDate, $subscription->getEndDate());
 	}
 
 	// Data Providers
@@ -163,20 +143,6 @@ class SubscriptionServiceTest extends TestCase
 			'renewing' => [
 				'status' => SubscriptionStatus::RENEWING,
 				'expectedMessage' => "Can't renew already renewing subscription"
-			],
-		];
-	}
-
-	public static function billingPeriodProvider(): array
-	{
-		return [
-			'monthly' => [
-				SubscriptionBillingPeriod::MONTHLY,
-				'+1 month'
-			],
-			'yearly' => [
-				SubscriptionBillingPeriod::YEARLY,
-				'+1 year'
 			],
 		];
 	}
