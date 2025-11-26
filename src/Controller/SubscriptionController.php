@@ -9,6 +9,7 @@ use App\Enum\SubscriptionStatus;
 use App\Exception\AlreadySubscribedException;
 use App\Exception\InvalidSubscriptionStatusException;
 use App\Repository\PlanRepository;
+use App\Service\StripeService;
 use App\Service\SubscriptionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;

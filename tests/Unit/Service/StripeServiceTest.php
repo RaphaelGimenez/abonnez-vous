@@ -7,6 +7,7 @@ use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
 use App\Exception\Stripe\InvalidLookupKeyException;
 use App\Service\StripeService;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Stripe\Checkout\Session;
@@ -19,6 +20,7 @@ use Stripe\StripeClient;
 class StripeServiceTest extends TestCase
 {
 	private MockObject&StripeClient $stripeClient;
+	private MockObject&EntityManagerInterface $entityManager;
 	private StripeService $service;
 	private MockObject&PriceService $priceServiceMock;
 	private MockObject&SessionService $sessionServiceMock;
@@ -28,6 +30,7 @@ class StripeServiceTest extends TestCase
 	protected function setUp(): void
 	{
 		$this->stripeClient = $this->createMock(StripeClient::class);
+		$this->entityManager = $this->createMock(EntityManagerInterface::class);
 		$this->priceServiceMock = $this->createMock(PriceService::class);
 		$this->sessionServiceMock = $this->createMock(SessionService::class);
 		$this->checkoutServiceMock = $this->createMock(CheckoutServiceFactory::class);
@@ -38,7 +41,7 @@ class StripeServiceTest extends TestCase
 		$this->checkoutServiceMock->sessions = $this->sessionServiceMock;
 		$this->stripeClient->customers = $this->customerServiceMock;
 
-		$this->service = new StripeService($this->stripeClient);
+		$this->service = new StripeService($this->stripeClient, $this->entityManager);
 	}
 
 	public function testCreateCheckoutSessionReturnsStripeUrl(): void
@@ -135,6 +138,10 @@ class StripeServiceTest extends TestCase
 				return $params['email'] === $user->getEmail();
 			}))
 			->willReturn((object) ['id' => 'cus_new_12345']);
+
+		$this->entityManager->expects($this->once())
+			->method('flush');
+
 		$stripeCustomerId = $this->service->getOrCreateStripeCustomerId($user);
 		$this->assertSame('cus_new_12345', $stripeCustomerId);
 		$this->assertSame('cus_new_12345', $user->getStripeCustomerId());

@@ -6,15 +6,20 @@ use App\Entity\Plan;
 use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
 use App\Exception\Stripe\InvalidLookupKeyException;
+use Doctrine\ORM\EntityManagerInterface;
 use Stripe\StripeClient;
 
 class StripeService
 {
 	private StripeClient $stripeClient;
+	private EntityManagerInterface $entityManager;
+
 	public function __construct(
-		StripeClient $stripeClient
+		StripeClient $stripeClient,
+		EntityManagerInterface $entityManager
 	) {
 		$this->stripeClient = $stripeClient;
+		$this->entityManager = $entityManager;
 	}
 
 	/**
@@ -81,6 +86,7 @@ class StripeService
 		]);
 
 		$user->setStripeCustomerId($customer->id);
+		$this->entityManager->flush();
 
 		return $customer->id;
 	}
