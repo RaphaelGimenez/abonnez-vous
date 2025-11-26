@@ -90,4 +90,14 @@ class StripeService
 
 		return $customer->id;
 	}
+
+	public function verifyWebhookSignature(string $payload, string $signature): \Stripe\Event
+	{
+		$webhookSecret = getenv('STRIPE_WEBHOOK_SECRET');
+		return \Stripe\Webhook::constructEvent(
+			$payload,
+			$signature,
+			$webhookSecret
+		);
+	}
 }
