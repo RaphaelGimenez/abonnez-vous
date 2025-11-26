@@ -23,8 +23,14 @@ class Plan
 	#[ORM\Column]
 	private ?int $monthlyPrice = null;
 
+	#[ORM\Column(length: 255, nullable: true)]
+	private ?string $stripeMonthlyLookupKey = null;
+
 	#[ORM\Column]
 	private ?int $yearlyPrice = null;
+
+	#[ORM\Column(length: 255, nullable: true)]
+	private ?string $stripeYearlyLookupKey = null;
 
 	public function getId(): ?int
 	{
@@ -55,6 +61,19 @@ class Plan
 		return $this;
 	}
 
+	public function setStripeMonthlyLookupKey(?string $stripeMonthlyLookupKey): static
+	{
+		$this->stripeMonthlyLookupKey = $stripeMonthlyLookupKey;
+
+		return $this;
+	}
+
+	public function getStripeMonthlyLookupKey(): ?string
+	{
+		return $this->stripeMonthlyLookupKey;
+	}
+
+
 	public function getYearlyPrice(): ?int
 	{
 		return $this->yearlyPrice;
@@ -63,6 +82,18 @@ class Plan
 	public function setYearlyPrice(int $yearlyPrice): static
 	{
 		$this->yearlyPrice = $yearlyPrice;
+
+		return $this;
+	}
+
+	public function getStripeYearlyLookupKey(): ?string
+	{
+		return $this->stripeYearlyLookupKey;
+	}
+
+	public function setStripeYearlyLookupKey(?string $stripeYearlyLookupKey): static
+	{
+		$this->stripeYearlyLookupKey = $stripeYearlyLookupKey;
 
 		return $this;
 	}
