@@ -21,7 +21,8 @@
 			"extensions": [
 				"mblode.twig-language",
 				"EditorConfig.EditorConfig",
-				"bradlc.vscode-tailwindcss"
+				"bradlc.vscode-tailwindcss",
+				"recca0120.vscode-phpunit"
 			]
 		}
 	}
