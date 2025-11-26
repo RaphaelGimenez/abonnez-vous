@@ -53,18 +53,37 @@ class StripeService
 			throw new InvalidLookupKeyException();
 		}
 
+		$stripeCustomerId = $this->getOrCreateStripeCustomerId($user);
+
 		$session = $this->stripeClient->checkout->sessions->create([
 			'mode' => 'subscription',
-			'customer_email' => $user->getEmail(),
-			'customer' => $user->getStripeCustomerId(),
+			'customer' => $stripeCustomerId,
 			'line_items' => [[
 				'price' => $prices->data[0]->id,
 				'quantity' => 1,
 			]],
-			'success_url' =>  '/subscription/success',
-			'cancel_url' =>  '/subscription/cancel',
+			'success_url' =>  'http://localhost:8000/subscription/success',
+			'cancel_url' =>  'http://localhost:8000/subscription/cancel',
 		]);
 
 		return $session;
+	}
+
+	public function getOrCreateStripeCustomerId(User $user): string
+	{
+		if ($user->getStripeCustomerId()) {
+			return $user->getStripeCustomerId();
+		}
+
+		$customer = $this->stripeClient->customers->create([
+			'email' => $user->getEmail(),
+			'metadata' => [
+				'userId' => $user->getId(),
+			],
+		]);
+
+		$user->setStripeCustomerId($customer->id);
+
+		return $customer->id;
 	}
 }

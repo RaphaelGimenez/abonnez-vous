@@ -12,6 +12,7 @@ use PHPUnit\Framework\TestCase;
 use Stripe\Checkout\Session;
 use Stripe\Service\Checkout\CheckoutServiceFactory;
 use Stripe\Service\Checkout\SessionService;
+use Stripe\Service\CustomerService;
 use Stripe\Service\PriceService;
 use Stripe\StripeClient;
 
@@ -22,6 +23,7 @@ class StripeServiceTest extends TestCase
 	private MockObject&PriceService $priceServiceMock;
 	private MockObject&SessionService $sessionServiceMock;
 	private MockObject&CheckoutServiceFactory $checkoutServiceMock;
+	private MockObject&CustomerService $customerServiceMock;
 
 	protected function setUp(): void
 	{
@@ -29,10 +31,12 @@ class StripeServiceTest extends TestCase
 		$this->priceServiceMock = $this->createMock(PriceService::class);
 		$this->sessionServiceMock = $this->createMock(SessionService::class);
 		$this->checkoutServiceMock = $this->createMock(CheckoutServiceFactory::class);
+		$this->customerServiceMock = $this->createMock(CustomerService::class);
 
 		$this->stripeClient->prices = $this->priceServiceMock;
 		$this->stripeClient->checkout = $this->checkoutServiceMock;
 		$this->checkoutServiceMock->sessions = $this->sessionServiceMock;
+		$this->stripeClient->customers = $this->customerServiceMock;
 
 		$this->service = new StripeService($this->stripeClient);
 	}
@@ -66,7 +70,6 @@ class StripeServiceTest extends TestCase
 			->with($this->callback(function ($params) use ($user) {
 				return $params['mode'] === 'subscription'
 					&& $params['customer'] === $user->getStripeCustomerId()
-					&& $params['customer_email'] === $user->getEmail()
 					&& $params['line_items'][0]['price'] === "price_12345";
 			}))
 			->willReturn($checkoutSessionMock);
@@ -80,6 +83,61 @@ class StripeServiceTest extends TestCase
 
 		// Assert
 		$this->assertSame('https://checkout.stripe.com/test/cs_test_12345', $session->url);
+	}
+
+	public function testCreacteCheckoutSessionShouldCreateStripeCustomerIfNotExists(): void
+	{
+		$user = new User();
+		$user->setEmail('test@example.com');
+		$user->setStripeCustomerId(null);
+		$plan = new Plan();
+		$plan->setStripeMonthlyLookupKey('monthly_plan_123');
+		$billingPeriod = SubscriptionBillingPeriod::MONTHLY;
+
+		$this->priceServiceMock->expects($this->once())
+			->method('all')
+			->willReturn((object) ['data' => [(object) ['id' => 'price_12345']]]);
+		$this->sessionServiceMock->expects($this->once())
+			->method('create')
+			->with($this->callback(function ($params) {
+				return $params['customer'] === 'cus_new_12345';
+			}))
+			->willReturn(Session::constructFrom([]));
+		$this->customerServiceMock->expects($this->once())
+			->method('create')
+			->willReturn((object) ['id' => 'cus_new_12345']);
+
+		$this->service->createCheckoutSession(
+			$user,
+			$plan,
+			$billingPeriod
+		);
+	}
+
+	public function testGetOrCreateStripeCustomerIdReturnsExistingId(): void
+	{
+		$user = new User();
+		$user->setEmail('test@example.com');
+		$user->setStripeCustomerId('cus_12345');
+
+		$stripeCustomerId = $this->service->getOrCreateStripeCustomerId($user);
+		$this->assertSame('cus_12345', $stripeCustomerId);
+	}
+
+	public function testGetOrCreateStripeCustomerIdCreatesNewCustomer(): void
+	{
+		$user = new User();
+		$user->setEmail('test@example.com');
+		$user->setStripeCustomerId(null);
+		$this->customerServiceMock->expects($this->once())
+			->method('create')
+			->with($this->callback(function ($params) use ($user) {
+				return $params['email'] === $user->getEmail();
+			}))
+			->willReturn((object) ['id' => 'cus_new_12345']);
+		$stripeCustomerId = $this->service->getOrCreateStripeCustomerId($user);
+		$this->assertSame('cus_new_12345', $stripeCustomerId);
+		$this->assertSame('cus_new_12345', $user->getStripeCustomerId());
 	}
 
 	/**
