@@ -145,6 +145,11 @@ class StripeServiceTest extends TestCase
 					->method('all')
 					->willThrowException(new \Exception('Stripe API error'));
 				break;
+			case 'null_lookup_key':
+				$plan->setStripeMonthlyLookupKey(null);
+				$this->priceServiceMock->expects($this->never())
+					->method('all');
+				break;
 		}
 
 		// Assert
@@ -189,6 +194,9 @@ class StripeServiceTest extends TestCase
 			],
 			'stripe_api_exception' => [
 				'scenario' => 'api_exception',
+			],
+			'null_lookup_key' => [
+				'scenario' => 'null_lookup_key',
 			],
 		];
 	}

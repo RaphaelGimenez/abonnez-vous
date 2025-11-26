@@ -34,6 +34,10 @@ class StripeService
 			? $plan->getStripeMonthlyLookupKey()
 			: $plan->getStripeYearlyLookupKey();
 
+		if (!$priceLookupKey) {
+			throw new InvalidLookupKeyException();
+		}
+
 		$prices = null;
 
 		try {
