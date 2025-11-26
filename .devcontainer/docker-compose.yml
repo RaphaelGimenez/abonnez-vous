@@ -1,0 +1,26 @@
+services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/php:1-8.2-bullseye
+    container_name: devcontainer
+    volumes:
+      - ..:/workspace:cached
+    ports:
+      - 8000:8000
+      - 9000:9000
+    command: tail -f /dev/null
+    networks:
+      - miniprojet-network
+
+  stripe-mock:
+    image: stripe/stripe-mock:latest
+    container_name: stripe-mock
+    ports:
+      - 12111:12111
+      - 12112:12112
+    command: ["stripe-mock", "-http-port", "12111"]
+    networks:
+      - miniprojet-network
+
+networks:
+  miniprojet-network:
+    driver: bridge

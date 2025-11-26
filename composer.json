@@ -76,6 +76,7 @@
 		"post-update-cmd": [
 			"@auto-scripts"
 		],
+		"serve": "symfony serve --no-tls --allow-all-ip",
 		"test": "php bin/phpunit --testdox",
 		"test:coverage": "XDEBUG_MODE=coverage php bin/phpunit --coverage-html coverage-report",
 		"test:coverage-text": "XDEBUG_MODE=coverage php bin/phpunit --coverage-text"

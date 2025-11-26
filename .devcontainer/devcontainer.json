@@ -3,7 +3,10 @@
 {
 	"name": "PHP",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/php:1-8.2-bullseye",
+	"dockerComposeFile": "./docker-compose.yml",
+	"service": "dev",
+	"workspaceFolder": "/workspace",
+	"shutdownAction": "stopCompose",
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
 	// Configure tool-specific properties.
@@ -11,10 +14,14 @@
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	"forwardPorts": [
 		8080,
-		9000
+		8000,
+		9000,
+		12111
 	],
+	"postCreateCommand": "composer install",
 	"features": {
-		"ghcr.io/shyim/devcontainers-features/symfony-cli:0": {}
+		"ghcr.io/shyim/devcontainers-features/symfony-cli:0": {},
+		"ghcr.io/nullcoder/devcontainer-features/stripe-cli:1": {}
 	},
 	"customizations": {
 		"vscode": {

@@ -39,7 +39,7 @@ Le projet utilise Sqlite comme base de données pour simplifier la configuration
 	 ```
 5. Lancer le serveur de développement Symfony :
 	 ```bash
-	 symfony serve
+	 composer serve
 	 ```
 6. Lancer le builder de styles Tailwind CSS :
 	 ```bash
