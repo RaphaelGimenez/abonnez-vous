@@ -45,7 +45,8 @@ class SubscriptionControllerTest extends WebTestCase
 		// Assert
 		$this->assertResponseIsSuccessful();
 		$this->assertSelectorTextContains('h1', 'Choisissez votre offre');
-		$this->assertSelectorCount(2, '[data-testid="plan-card"]');
+		$forms = $this->client->getCrawler()->filter('form[data-testid^="subscription-form-"]');
+		$this->assertCount(2, $forms, 'There should be a subscription form for each plan displayed');
 	}
 
 	public function testSubscribeRequiresAuthentication(): void
