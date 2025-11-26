@@ -23,11 +23,15 @@ class AppFixtures extends Fixture
 				'name' => 'Tarif normal',
 				'monthlyPrice' => 12,
 				'yearlyPrice' => 120,
+				'stripeMonthlyLookupKey' => 'tarif_normal_monthly',
+				'stripeYearlyLookupKey' => 'tarif_normal_yearly',
 			],
 			[
 				'name' => 'Tarif soutien',
 				'monthlyPrice' => 16,
 				'yearlyPrice' => 160,
+				'stripeMonthlyLookupKey' => 'tarif_soutien_monthly',
+				'stripeYearlyLookupKey' => 'tarif_soutien_yearly',
 			],
 		];
 
@@ -36,6 +40,8 @@ class AppFixtures extends Fixture
 			$plan->setName($planData['name']);
 			$plan->setMonthlyPrice($planData['monthlyPrice']);
 			$plan->setyearlyPrice($planData['yearlyPrice']);
+			$plan->setStripeMonthlyLookupKey($planData['stripeMonthlyLookupKey']);
+			$plan->setStripeYearlyLookupKey($planData['stripeYearlyLookupKey']);
 
 			$manager->persist($plan);
 		}
