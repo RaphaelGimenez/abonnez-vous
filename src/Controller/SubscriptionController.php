@@ -63,6 +63,7 @@ final class SubscriptionController extends AbstractController
 	#[IsGranted('IS_AUTHENTICATED_FULLY')]
 	public function subscribe(
 		PlanRepository $planRepository,
+		StripeService $stripeService,
 		Request $request,
 		CsrfTokenManagerInterface $csrfTokenManager
 	): Response {
@@ -91,9 +92,12 @@ final class SubscriptionController extends AbstractController
 		}
 
 		try {
-			$this->subscriptionService->createSubscription($user, $plan, $billingPeriod);
-			$this->addFlash('success', 'Vous vous êtes abonné avec succès au plan ' . $plan->getName() . '.');
-			return $this->redirectToRoute('app_main');
+			$checkoutSession = $stripeService->createCheckoutSession(
+				$user,
+				$plan,
+				$billingPeriod,
+			);
+			return $this->redirect($checkoutSession->url);
 		} catch (AlreadySubscribedException $e) {
 			$this->addFlash('error', $e->getMessage());
 			return $this->redirectToRoute('app_subscription');
