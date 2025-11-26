@@ -92,6 +92,11 @@ final class SubscriptionController extends AbstractController
 			return $this->redirectToRoute('app_subscription');
 		}
 
+		if ($user->getSubscription()) {
+			$this->addFlash('error', 'You already have an active subscription.');
+			return $this->redirectToRoute('app_subscription');
+		}
+
 		try {
 			$checkoutSession = $stripeService->createCheckoutSession(
 				$user,
