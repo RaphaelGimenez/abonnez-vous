@@ -15,3 +15,4 @@
 /.phpunit.cache/
 /coverage-report/
 ###< phpunit/phpunit ###
+.devcontainer/.env

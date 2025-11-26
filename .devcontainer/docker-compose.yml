@@ -13,11 +13,22 @@ services:
 
   stripe-mock:
     image: stripe/stripe-mock:latest
-    container_name: stripe-mock
+    container_name: miniprojet-stripe-mock
     ports:
       - 12111:12111
       - 12112:12112
     command: ["stripe-mock", "-http-port", "12111"]
+    networks:
+      - miniprojet-network
+
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    container_name: miniprojet-stripe-cli
+    command: listen --forward-to http://dev:8000/webhook/stripe --skip-verify
+    environment:
+      - STRIPE_API_KEY=${STRIPE_API_KEY}
+    env_file:
+      - .env
     networks:
       - miniprojet-network
 
