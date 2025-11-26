@@ -5,6 +5,7 @@ namespace App\Tests\Unit\Service;
 use App\Entity\Plan;
 use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
+use App\Exception\Stripe\InvalidLookupKeyException;
 use App\Service\StripeService;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -118,6 +119,45 @@ class StripeServiceTest extends TestCase
 		);
 	}
 
+	/**
+	 * @dataProvider invalidLookupKeyProvider
+	 */
+	public function testCreateCheckoutSessionThrowsExceptionOnInvalidLookupKey(
+		string $scenario,
+	): void {
+		// Arrange
+		$user = new User();
+		$user->setEmail('test@example.com');
+		$user->setStripeCustomerId('cus_12345');
+
+		$plan = new Plan();
+		$plan->setStripeMonthlyLookupKey('invalid_monthly_key');
+		$plan->setStripeYearlyLookupKey('invalid_yearly_key');
+
+		switch ($scenario) {
+			case 'empty_results':
+				$this->priceServiceMock->expects($this->once())
+					->method('all')
+					->willReturn((object) ['data' => []]);
+				break;
+			case 'api_exception':
+				$this->priceServiceMock->expects($this->once())
+					->method('all')
+					->willThrowException(new \Exception('Stripe API error'));
+				break;
+		}
+
+		// Assert
+		$this->expectException(InvalidLookupKeyException::class);
+
+		// Act
+		$this->service->createCheckoutSession(
+			$user,
+			$plan,
+			SubscriptionBillingPeriod::MONTHLY
+		);
+	}
+
 	public static function billingPeriodProvider(): array
 	{
 		$monthlyLookupKey = 'monthly_plan_123';
@@ -137,6 +177,18 @@ class StripeServiceTest extends TestCase
 				'expectedPriceLookupKey' =>
 				$yearlyLookupKey,
 				'billingPeriod' => SubscriptionBillingPeriod::YEARLY,
+			],
+		];
+	}
+
+	public static function invalidLookupKeyProvider(): array
+	{
+		return [
+			'empty_results' => [
+				'scenario' => 'empty_results',
+			],
+			'stripe_api_exception' => [
+				'scenario' => 'api_exception',
 			],
 		];
 	}

@@ -5,6 +5,7 @@ namespace App\Service;
 use App\Entity\Plan;
 use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
+use App\Exception\Stripe\InvalidLookupKeyException;
 use Stripe\StripeClient;
 
 \Stripe\Stripe::setApiKey(getenv('STRIPE_SECRET_KEY'));
@@ -33,10 +34,20 @@ class StripeService
 			? $plan->getStripeMonthlyLookupKey()
 			: $plan->getStripeYearlyLookupKey();
 
-		$prices = $this->stripeClient->prices->all([
-			'lookup_keys' => [$priceLookupKey],
-			'limit' => 1,
-		]);
+		$prices = null;
+
+		try {
+			$prices = $this->stripeClient->prices->all([
+				'lookup_keys' => [$priceLookupKey],
+				'limit' => 1,
+			]);
+		} catch (\Exception $e) {
+			throw new InvalidLookupKeyException();
+		}
+
+		if (empty($prices->data)) {
+			throw new InvalidLookupKeyException();
+		}
 
 		$session = $this->stripeClient->checkout->sessions->create([
 			'mode' => 'subscription',
