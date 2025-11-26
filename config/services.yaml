@@ -26,3 +26,12 @@ services:
     Stripe\StripeClient:
         arguments:
             $config: '%stripe.secret_key%'
+
+when@test:
+    services:
+        # Override StripeClient for tests to use stripe-mock
+        Stripe\StripeClient:
+            arguments:
+                $config:
+                    api_key: '%env(STRIPE_SECRET_KEY)%'
+                    api_base: 'http://stripe-mock:12111'
