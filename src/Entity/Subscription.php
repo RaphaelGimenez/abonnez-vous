@@ -29,19 +29,13 @@ class Subscription
 	private ?Plan $plan = null;
 
 	#[ORM\Column(length: 255)]
+	private string $stripeSubscriptionId;
+
+	#[ORM\Column(length: 255)]
 	private SubscriptionStatus $status = SubscriptionStatus::ACTIVE;
 
 	#[ORM\Column]
 	private SubscriptionBillingPeriod $billingPeriod = SubscriptionBillingPeriod::MONTHLY;
-
-	#[ORM\Column]
-	private ?\DateTimeImmutable $startDate = null;
-
-	#[ORM\Column]
-	private ?\DateTimeImmutable $endDate = null;
-
-	#[ORM\Column]
-	private ?bool $autoRenew = null;
 
 	public function getId(): ?int
 	{
@@ -72,6 +66,18 @@ class Subscription
 		return $this;
 	}
 
+	public function getStripeSubscriptionId(): string
+	{
+		return $this->stripeSubscriptionId;
+	}
+
+	public function setStripeSubscriptionId(string $stripeSubscriptionId): static
+	{
+		$this->stripeSubscriptionId = $stripeSubscriptionId;
+
+		return $this;
+	}
+
 	public function getStatus(): SubscriptionStatus
 	{
 		return $this->status;
@@ -92,42 +98,6 @@ class Subscription
 	public function setBillingPeriod(SubscriptionBillingPeriod $billingPeriod): static
 	{
 		$this->billingPeriod = $billingPeriod;
-
-		return $this;
-	}
-
-	public function getStartDate(): ?\DateTimeImmutable
-	{
-		return $this->startDate;
-	}
-
-	public function setStartDate(\DateTimeImmutable $startDate): static
-	{
-		$this->startDate = $startDate;
-
-		return $this;
-	}
-
-	public function getEndDate(): ?\DateTimeImmutable
-	{
-		return $this->endDate;
-	}
-
-	public function setEndDate(\DateTimeImmutable $endDate): static
-	{
-		$this->endDate = $endDate;
-
-		return $this;
-	}
-
-	public function isAutoRenew(): ?bool
-	{
-		return $this->autoRenew;
-	}
-
-	public function setAutoRenew(bool $autoRenew): static
-	{
-		$this->autoRenew = $autoRenew;
 
 		return $this;
 	}

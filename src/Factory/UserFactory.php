@@ -10,41 +10,40 @@ use Zenstruck\Foundry\Persistence\PersistentProxyObjectFactory;
  */
 final class UserFactory extends PersistentProxyObjectFactory
 {
-    /**
-     * @see https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html#factories-as-services
-     *
-     * @todo inject services if required
-     */
-    public function __construct()
-    {
-    }
+	/**
+	 * @see https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html#factories-as-services
+	 *
+	 * @todo inject services if required
+	 */
+	public function __construct() {}
 
-    public static function class(): string
-    {
-        return User::class;
-    }
+	public static function class(): string
+	{
+		return User::class;
+	}
 
-    /**
-     * @see https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html#model-factories
-     *
-     * @todo add your default values here
-     */
-    protected function defaults(): array|callable
-    {
-        return [
-            'email' => self::faker()->text(180),
-            'password' => self::faker()->text(),
-            'roles' => [],
-        ];
-    }
+	/**
+	 * @see https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html#model-factories
+	 *
+	 * @todo add your default values here
+	 */
+	protected function defaults(): array|callable
+	{
+		return [
+			'email' => self::faker()->text(180),
+			'password' => self::faker()->text(),
+			'roles' => [],
+			'stripeCustomerId' => null,
+		];
+	}
 
-    /**
-     * @see https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html#initialization
-     */
-    protected function initialize(): static
-    {
-        return $this
-            // ->afterInstantiate(function(User $user): void {})
-        ;
-    }
+	/**
+	 * @see https://symfony.com/bundles/ZenstruckFoundryBundle/current/index.html#initialization
+	 */
+	protected function initialize(): static
+	{
+		return $this
+			// ->afterInstantiate(function(User $user): void {})
+		;
+	}
 }

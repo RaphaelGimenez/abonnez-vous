@@ -3,9 +3,12 @@
 namespace App\Service;
 
 use App\Entity\Plan;
+use App\Entity\Subscription;
 use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
 use App\Exception\Stripe\InvalidLookupKeyException;
+use App\Repository\PlanRepository;
+use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Stripe\StripeClient;
 
@@ -16,7 +19,9 @@ class StripeService
 
 	public function __construct(
 		StripeClient $stripeClient,
-		EntityManagerInterface $entityManager
+		EntityManagerInterface $entityManager,
+		private UserRepository $userRepository,
+		private PlanRepository $planRepository
 	) {
 		$this->stripeClient = $stripeClient;
 		$this->entityManager = $entityManager;
@@ -99,5 +104,32 @@ class StripeService
 			$signature,
 			$webhookSecret
 		);
+	}
+
+	/**
+	 * Handle checkout session completed event from Stripe webhook
+	 * @param \Stripe\Checkout\Session $session
+	 */
+	public function handleCheckoutSessionCompleted(mixed $session): void
+	{
+		$customerId = $session->customer;
+		$subscriptionId = $session->subscription;
+		$metadata = $session->metadata ?? null;
+
+		$planId = $metadata->planId ?? null;
+		$billingPeriod = isset($metadata->billingPeriod) ? SubscriptionBillingPeriod::tryFrom($metadata->billingPeriod) : null;
+
+		// Implement logic to create a subscription record in your database
+		// linking the user, plan, and Stripe subscription ID.
+		$user = $this->userRepository->findOneBy(['stripeCustomerId' => $customerId]);
+		$plan = $this->planRepository->find($planId);
+		$subscription = new Subscription();
+		$subscription->setUser($user);
+		$subscription->setPlan($plan);
+		$subscription->setStripeSubscriptionId($subscriptionId);
+		$subscription->setBillingPeriod($billingPeriod);
+
+		$this->entityManager->persist($subscription);
+		$this->entityManager->flush();
 	}
 }
