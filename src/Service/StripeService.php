@@ -8,8 +8,6 @@ use App\Enum\SubscriptionBillingPeriod;
 use App\Exception\Stripe\InvalidLookupKeyException;
 use Stripe\StripeClient;
 
-\Stripe\Stripe::setApiKey(getenv('STRIPE_SECRET_KEY'));
-
 class StripeService
 {
 	private StripeClient $stripeClient;
