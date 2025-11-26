@@ -104,7 +104,7 @@ class StripeWebhookControllerTest extends WebTestCase
 
 	public function generateSignature(string $payload)
 	{
-		$webhookSecret = getenv('STRIPE_WEBHOOK_SECRET');
+		$webhookSecret = $_ENV['STRIPE_WEBHOOK_SECRET'];
 		$timestamp = time();
 		$signedPayload = $timestamp . '.' . $payload;
 		$signature = hash_hmac('sha256', $signedPayload, $webhookSecret);
