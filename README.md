@@ -1,11 +1,12 @@
 # Mini projet Symfony
 
+Démo : https://abonnez-vous.raphaelgimenez.fr
+
 Ce dépôt contient un mini projet développé avec le framework Symfony. Il me permet de mettre en pratique les concepts fondamentaux de Symfony : gestion des routes, contrôleurs, entités, formulaires et services.
 
 Le projet implémente un système d'abonnement selon différents plans tarifaires. Les utilisateurs peuvent s'inscrire, choisir un plan d'abonnement et gérer leur abonnement via une interface simple.
 
 ## Développement
-
 
 ### Configuration devcontainer
 
