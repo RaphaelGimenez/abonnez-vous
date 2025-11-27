@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Stripe\Checkout\Session;
+use Stripe\Service\BillingPortal\BillingPortalServiceFactory;
 use Stripe\Service\Checkout\CheckoutServiceFactory;
 use Stripe\Service\Checkout\SessionService;
 use Stripe\Service\CustomerService;
@@ -26,6 +27,8 @@ class StripeServiceTest extends TestCase
 	private MockObject&SessionService $sessionServiceMock;
 	private MockObject&CheckoutServiceFactory $checkoutServiceMock;
 	private MockObject&CustomerService $customerServiceMock;
+	private MockObject&BillingPortalServiceFactory $billingPortalFactoryMock;
+	private MockObject&\Stripe\Service\BillingPortal\SessionService $billingPortalServiceMock;
 
 	protected function setUp(): void
 	{
@@ -35,11 +38,15 @@ class StripeServiceTest extends TestCase
 		$this->sessionServiceMock = $this->createMock(SessionService::class);
 		$this->checkoutServiceMock = $this->createMock(CheckoutServiceFactory::class);
 		$this->customerServiceMock = $this->createMock(CustomerService::class);
+		$this->billingPortalFactoryMock = $this->createMock(BillingPortalServiceFactory::class);
+		$this->billingPortalServiceMock = $this->createMock(\Stripe\Service\BillingPortal\SessionService::class);
 
 		$this->stripeClient->prices = $this->priceServiceMock;
 		$this->stripeClient->checkout = $this->checkoutServiceMock;
 		$this->checkoutServiceMock->sessions = $this->sessionServiceMock;
 		$this->stripeClient->customers = $this->customerServiceMock;
+		$this->stripeClient->billingPortal = $this->billingPortalFactoryMock;
+		$this->billingPortalFactoryMock->sessions = $this->billingPortalServiceMock;
 
 		$paramMock = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface::class);
 		$paramMock->method('get')
@@ -244,8 +251,28 @@ class StripeServiceTest extends TestCase
 
 	public function testCreateBillingPortalSessionReturnsStripeUrl(): void
 	{
+		// Arrange
+		$user = new User();
+		$user->setEmail('test@example.com');
+		$user->setStripeCustomerId('cus_12345');
+
+		$billingSessionMock = \Stripe\BillingPortal\Session::constructFrom([
+			'id' => 'bps_test_12345',
+			'object' => 'billing_portal.session',
+			'url' => 'https://billing.stripe.com/test/portal_12345',
+			'customer' => 'cus_12345',
+		]);
+
+		$this->billingPortalServiceMock->expects($this->once())
+			->method('create')
+			->with($this->callback(function ($params) use ($user) {
+				return $params['customer'] === $user->getStripeCustomerId()
+					&& $params['return_url'] === $_ENV['DEFAULT_URI'];
+			}))
+			->willReturn($billingSessionMock);
+
 		// Act
-		$session = $this->service->createBillingPortalSession();
+		$session = $this->service->createBillingPortalSession($user);
 
 		// Assert
 		$this->assertSame('https://billing.stripe.com/test/portal_12345', $session->url);

@@ -84,14 +84,20 @@ class StripeService
 
 		return $session;
 	}
-
-	public function createBillingPortalSession()
+	/**
+	 * Creates a Stripe Billing Portal session for managing subscriptions
+	 *
+	 * @param User $user The user for whom to create the billing portal session
+	 * @return \Stripe\BillingPortal\Session The created billing portal session
+	 */
+	public function createBillingPortalSession(User $user): object
 	{
-		$session = [
-			'url' => 'https://billing.stripe.com/test/portal_12345',
-		];
+		$session = $this->stripeClient->billingPortal->sessions->create([
+			'customer' => $user->getStripeCustomerId(),
+			'return_url' => $this->params->get('app.default_uri'),
+		]);
 
-		return (object) $session;
+		return $session;
 	}
 
 	public function getOrCreateStripeCustomerId(User $user): string
