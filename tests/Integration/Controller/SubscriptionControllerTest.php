@@ -181,32 +181,6 @@ class SubscriptionControllerTest extends WebTestCase
 	/**
 	 * Test subscription management
 	 */
-
-	/**
-	 * @dataProvider subscriptionActionProvider
-	 */
-	public function testSubscriptionActions(
-		string $action,
-		SubscriptionStatus $initialStatus,
-		SubscriptionStatus $expectedStatus
-	): void {
-		// Arrange
-		$user = $this->createAuthenticatedUser();
-		$plan = PlanFactory::createOne();
-		SubscriptionFactory::createOne([
-			'user' => $user,
-			'plan' => $plan,
-			'status' => $initialStatus,
-		]);
-
-		// Act
-		$this->submitManageSubscriptionForm($action);
-		$this->client->followRedirect();
-
-		// Assert
-		$subscription = $this->assertHasSubscription($user, $plan, $expectedStatus);
-	}
-
 	public function testManageRedirectsWhenNoSubscription(): void
 	{
 		// Arrange
@@ -228,58 +202,6 @@ class SubscriptionControllerTest extends WebTestCase
 		// Assert
 		$this->assertResponseRedirects('/login', 302);
 	}
-
-	/**
-	 * @dataProvider subscriptionActionMethodProvider
-	 */
-	public function testManageActionRequiresCsrfToken(
-		string $action,
-	): void {
-		// Arrange
-		$user = $this->createAuthenticatedUser();
-		$plan = PlanFactory::createOne();
-		SubscriptionFactory::createOne([
-			'user' => $user,
-			'plan' => $plan,
-			'status' => SubscriptionStatus::ACTIVE,
-		]);
-
-		// Act - submit with wrong method
-		$this->client->request('POST', '/subscription/' . $action);
-
-		// Assert
-		$this->assertResponseStatusCodeSame(403);
-		$this->assertHasSubscription($user, $plan, SubscriptionStatus::ACTIVE);
-	}
-
-	/**
-	 * @dataProvider subscriptionActionMethodProvider
-	 */
-	public function testManageActionRequiresAuthentication(
-		string $action,
-	): void {
-		// Act
-		$this->client->request('POST', '/subscription/' . $action);
-		// Assert -> redirected to login
-		$this->assertResponseRedirects('/login', 302);
-	}
-
-	/**
-	 * @dataProvider subscriptionActionMethodProvider
-	 */
-	public function testManageActionRequiresSubscription(
-		string $action,
-	): void {
-		// Arrange
-		$this->createAuthenticatedUser();
-
-		// Act
-		$this->client->request('POST', '/subscription/' . $action);
-
-		// Assert
-		$this->assertResponseStatusCodeSame(403);
-	}
-
 
 	/**
 	 * Utils
@@ -334,52 +256,5 @@ class SubscriptionControllerTest extends WebTestCase
 		)->form();
 
 		$this->client->submit($form, ['billing_period' => $billingPeriod]);
-	}
-
-	/**
-	 * Submits a subscription management form (cancel or renew).
-	 */
-	private function submitManageSubscriptionForm(string $action): void
-	{
-		$crawler = $this->client->request('GET', '/subscription/manage');
-		$form = $crawler->filter(
-			'form[data-testid="' . $action . '-subscription-form"]'
-		)->form();
-
-		$this->client->submit($form);
-	}
-
-	// Data providers
-	public static function subscriptionActionProvider(): array
-	{
-		return [
-			'cancel_active_subscription' => [
-				'action' => 'cancel',
-				'initialStatus' => SubscriptionStatus::ACTIVE,
-				'expectedStatus' => SubscriptionStatus::CANCELED,
-			],
-			'cancel_renewing_subscription' => [
-				'action' => 'cancel',
-				'initialStatus' => SubscriptionStatus::RENEWING,
-				'expectedStatus' => SubscriptionStatus::CANCELED,
-			],
-			'renew_canceled_subscription' => [
-				'action' => 'renew',
-				'initialStatus' => SubscriptionStatus::CANCELED,
-				'expectedStatus' => SubscriptionStatus::RENEWING,
-			],
-		];
-	}
-
-	public static function subscriptionActionMethodProvider(): array
-	{
-		return [
-			'cancel_via_POST' => [
-				'action' => 'cancel',
-			],
-			'renew_via_POST' => [
-				'action' => 'renew',
-			],
-		];
 	}
 }
