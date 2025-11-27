@@ -6,8 +6,10 @@ use App\Entity\Plan;
 use App\Entity\Subscription;
 use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
+use App\Enum\SubscriptionStatus;
 use App\Exception\Stripe\InvalidLookupKeyException;
 use App\Repository\PlanRepository;
+use App\Repository\SubscriptionRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Stripe\StripeClient;
@@ -24,6 +26,7 @@ class StripeService
 		EntityManagerInterface $entityManager,
 		private UserRepository $userRepository,
 		private PlanRepository $planRepository,
+		private SubscriptionRepository $subscriptionRepository,
 		ContainerBagInterface $params
 	) {
 		$this->stripeClient = $stripeClient;
@@ -154,5 +157,22 @@ class StripeService
 
 		$this->entityManager->persist($subscription);
 		$this->entityManager->flush();
+	}
+
+	/**
+	 * Handle customer.subscription.updated event from Stripe webhook
+	 * @param \Stripe\Subscription $subscription
+	 */
+	public function handleCustomerSubscriptionUpdated(mixed $subscription): void
+	{
+		$stripeSubscriptionId = $subscription->id;
+		$status = $subscription->status;
+
+		$subscriptionEntity = $this->subscriptionRepository->findOneBy(['stripeSubscriptionId' => $stripeSubscriptionId]);
+
+		if ($subscriptionEntity) {
+			$subscriptionEntity->setStatus(SubscriptionStatus::from($status));
+			$this->subscriptionRepository->save($subscriptionEntity);
+		}
 	}
 }

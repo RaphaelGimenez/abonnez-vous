@@ -45,7 +45,11 @@ final class StripeWebhookController extends AbstractController
 					$session = $event->data->object;
 					$this->stripeService->handleCheckoutSessionCompleted($session);
 					break;
-				// Handle other event types as needed
+				case 'customer.subscription.updated':
+					$subscription = $event->data->object;
+					$this->logger->info('Handling customer.subscription.updated event', ['event' => $subscription]);
+					$this->stripeService->handleCustomerSubscriptionUpdated($subscription);
+					break;
 				default:
 					// Unexpected event type
 					return new Response('Unhandled event type', Response::HTTP_BAD_REQUEST);

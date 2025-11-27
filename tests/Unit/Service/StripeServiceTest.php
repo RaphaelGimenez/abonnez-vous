@@ -3,8 +3,10 @@
 namespace App\Tests\Unit\Service;
 
 use App\Entity\Plan;
+use App\Entity\Subscription;
 use App\Entity\User;
 use App\Enum\SubscriptionBillingPeriod;
+use App\Enum\SubscriptionStatus;
 use App\Exception\Stripe\InvalidLookupKeyException;
 use App\Service\StripeService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +24,7 @@ class StripeServiceTest extends TestCase
 {
 	private MockObject&StripeClient $stripeClient;
 	private MockObject&EntityManagerInterface $entityManager;
+	private MockObject&\App\Repository\SubscriptionRepository $subscriptionRepositoryMock;
 	private StripeService $service;
 	private MockObject&PriceService $priceServiceMock;
 	private MockObject&SessionService $sessionServiceMock;
@@ -34,6 +37,7 @@ class StripeServiceTest extends TestCase
 	{
 		$this->stripeClient = $this->createMock(StripeClient::class);
 		$this->entityManager = $this->createMock(EntityManagerInterface::class);
+		$this->subscriptionRepositoryMock = $this->createMock(\App\Repository\SubscriptionRepository::class);
 		$this->priceServiceMock = $this->createMock(PriceService::class);
 		$this->sessionServiceMock = $this->createMock(SessionService::class);
 		$this->checkoutServiceMock = $this->createMock(CheckoutServiceFactory::class);
@@ -59,6 +63,7 @@ class StripeServiceTest extends TestCase
 			$this->entityManager,
 			$this->createMock(\App\Repository\UserRepository::class),
 			$this->createMock(\App\Repository\PlanRepository::class),
+			$this->subscriptionRepositoryMock,
 			$paramMock
 		);
 	}
@@ -342,6 +347,73 @@ class StripeServiceTest extends TestCase
 			],
 			'null_lookup_key' => [
 				'scenario' => 'null_lookup_key',
+			],
+		];
+	}
+
+	/**
+	 * @dataProvider customerSubscriptionUpdatedProvider
+	 */
+	public function testHandleCustomerSubscriptionUpdatedUpdatesSubscriptionStatus(string $subscriptionStatus, SubscriptionStatus $expectedStatus): void
+	{
+		// Arrange
+		$plan = new Plan();
+		$plan->setName('Basic');
+		$plan->setStripeMonthlyLookupKey('price_123');
+
+		$user = new User();
+		$user->setEmail('test@example.com');
+		$user->setStripeCustomerId('cus_test_123');
+
+		$subscriptionEntity = new Subscription();
+		$subscriptionEntity->setStripeSubscriptionId('sub_test_123');
+		$subscriptionEntity->setUser($user);
+		$subscriptionEntity->setPlan($plan);
+		$subscriptionEntity->setStatus(SubscriptionStatus::ACTIVE);
+
+		$this->subscriptionRepositoryMock->expects($this->once())
+			->method('findOneBy')
+			->with(['stripeSubscriptionId' => 'sub_test_123'])
+			->willReturn($subscriptionEntity);
+
+		$this->subscriptionRepositoryMock->expects($this->once())
+			->method('save')
+			->with(
+				$this->callback(function ($subscription) use ($expectedStatus) {
+					return $subscription->getStatus() === $expectedStatus;
+				}),
+				$this->anything()
+			);
+
+		// Act & Assert
+		$subscription = $this->createStripeSubscription('sub_test_123', $subscriptionStatus, 'price_123');
+		$this->service->handleCustomerSubscriptionUpdated($subscription);
+	}
+
+	public function createStripeSubscription(string $id, string $status, string $lookupKey): \Stripe\Subscription
+	{
+		$subscription = new \Stripe\Subscription($id);
+		$subscription->status = $status;
+		$subscription->items = (object)[
+			'data' => [(object)[
+				'price' => (object)[
+					'lookup_key' => $lookupKey,
+				],
+			]],
+		];
+		return $subscription;
+	}
+
+	public static function customerSubscriptionUpdatedProvider(): array
+	{
+		return [
+			'active' => [
+				'subscriptionStatus' => 'active',
+				'expectedStatus' => SubscriptionStatus::ACTIVE
+			],
+			'canceled' => [
+				'subscriptionStatus' => 'canceled',
+				'expectedStatus' => SubscriptionStatus::CANCELED
 			],
 		];
 	}
