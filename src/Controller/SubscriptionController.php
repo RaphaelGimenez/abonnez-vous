@@ -24,7 +24,7 @@ final class SubscriptionController extends AbstractController
 	public function __construct(private SubscriptionService $subscriptionService) {}
 
 	#[Route('/subscription/subscribe', name: 'app_subscription', methods: ['GET'])]
-	public function index(PlanRepository $planRepository): Response
+	public function index(PlanRepository $planRepository, Request $request): Response
 	{
 		$plans = $planRepository->findAll();
 
@@ -33,11 +33,14 @@ final class SubscriptionController extends AbstractController
 		$subscription = $user?->getSubscription();
 		$userPlan = $subscription?->getPlan();
 
+		$checkoutCancelled = $request->query->get('checkoutCancelled', false);
+
 		return $this->render('subscription/index.html.twig', [
 			'plans' => $plans,
 			'userPlan' => $userPlan,
 			'userSubscription' => $subscription,
 			'manageUrl' => $this->generateUrl('app_subscription_manage'),
+			'checkoutCancelled' => $checkoutCancelled,
 		]);
 	}
 

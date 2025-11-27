@@ -98,6 +98,19 @@ class SubscriptionControllerTest extends WebTestCase
 		$this->assertSame(1, SubscriptionFactory::repository()->count(['user' => $user]), 'User should have exactly one subscription');
 	}
 
+	public function testUserHasCanceledMessageWhenCommingBackFromCanceledCheckout(): void
+	{
+		$this->createAuthenticatedUser();
+		PlanFactory::createOne();
+
+		// Act
+		$this->client->request('GET', '/subscription/subscribe?checkoutCancelled=true');
+
+		// Assert
+		$this->assertResponseIsSuccessful();
+		$this->assertSelectorExists('[data-testid="flash-checkout-cancelled"]');
+	}
+
 	public function testSubscribeWithInvalidBillingPeriod(): void
 	{
 		$this->createAuthenticatedUser();
