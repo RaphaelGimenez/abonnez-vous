@@ -46,8 +46,9 @@ final class SubscriptionController extends AbstractController
 
 	#[Route('/subscription/manage', name: 'app_subscription_manage')]
 	#[IsGranted('IS_AUTHENTICATED_FULLY')]
-	public function manage(): Response
-	{
+	public function manage(
+		StripeService $stripeService,
+	): Response {
 		/** @var User $user */
 		$user = $this->getUser();
 		$subscription = $user->getSubscription();
@@ -57,9 +58,8 @@ final class SubscriptionController extends AbstractController
 			return $this->redirectToRoute('app_subscription');
 		}
 
-		return $this->render('subscription/manage.html.twig', [
-			'subscription' => $subscription,
-		]);
+		$session = $stripeService->createBillingPortalSession($user);
+		return $this->redirect($session->url);
 	}
 
 

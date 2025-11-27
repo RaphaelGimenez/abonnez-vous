@@ -93,7 +93,7 @@ class SubscriptionControllerTest extends WebTestCase
 		// Assert
 		$this->assertResponseRedirects();
 		$redirectUrl = $this->client->getResponse()->headers->get('Location');
-		$this->assertStringContainsString('billing.stripe.com', $redirectUrl, 'User should be redirected to Stripe Checkout');
+		$this->assertStringContainsString('stripe.me/session', $redirectUrl, 'User should be redirected to Stripe Checkout');
 	}
 
 	public function testUserCannotSubscribeTwice(): void
