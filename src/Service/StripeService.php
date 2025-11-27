@@ -179,10 +179,10 @@ class StripeService
 		if ($subscriptionEntity) {
 			$subscriptionEntity->setStatus(SubscriptionStatus::from($status));
 
-			if (isset($subscription->cancellation_details->reason) && isset($subscription->cancel_at)) {
-				$subscriptionEntity->setCancellationReason($subscription->cancellation_details->reason);
-				$subscriptionEntity->setCancelAt((new \DateTimeImmutable())->setTimestamp($subscription->cancel_at));
-			}
+			$subscriptionEntity->setCancellationReason($subscription->cancellation_details->reason ?? null);
+			$subscriptionEntity->setCancelAt(
+				isset($subscription->cancel_at) ? (new \DateTimeImmutable())->setTimestamp($subscription->cancel_at) : null
+			);
 
 			$this->subscriptionRepository->save($subscriptionEntity);
 		}

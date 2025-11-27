@@ -461,6 +461,34 @@ class StripeServiceTest extends TestCase
 		$this->service->handleCustomerSubscriptionUpdated($subscriptionMock);
 	}
 
+	public function testHandleCustomerSubscriptionUpdatedUnsetCancellationFields(): void
+	{
+		// Arrange
+		$subscriptionEntity = $this->createSubscriptionEntity('sub_test_123', SubscriptionStatus::ACTIVE);
+		$subscriptionEntity->setCancellationReason('cancellation_requested');
+		$subscriptionEntity->setCancelAt(new \DateTimeImmutable('+1 day'));
+
+		$subscriptionMock = $this->createStripeSubscription('sub_test_123', 'active', 'price_123', false);
+
+		$this->subscriptionRepositoryMock->expects($this->once())
+			->method('findOneBy')
+			->with(['stripeSubscriptionId' => 'sub_test_123'])
+			->willReturn($subscriptionEntity);
+
+		$this->subscriptionRepositoryMock->expects($this->once())
+			->method('save')
+			->with(
+				$this->callback(function ($subscription) {
+					return $subscription->getCancellationReason() === null
+						&& $subscription->getCancelAt() === null;
+				}),
+				$this->anything()
+			);
+
+		// Act & Assert
+		$this->service->handleCustomerSubscriptionUpdated($subscriptionMock);
+	}
+
 	public function createSubscriptionEntity(string $stripeSubscriptionId, SubscriptionStatus $status): Subscription
 	{
 		$plan = new Plan();
