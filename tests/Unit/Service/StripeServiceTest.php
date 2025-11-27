@@ -25,6 +25,8 @@ class StripeServiceTest extends TestCase
 	private MockObject&StripeClient $stripeClient;
 	private MockObject&EntityManagerInterface $entityManager;
 	private MockObject&\App\Repository\SubscriptionRepository $subscriptionRepositoryMock;
+	private MockObject&\App\Repository\UserRepository $userRepositoryMock;
+	private MockObject&\App\Repository\PlanRepository $planRepositoryMock;
 	private StripeService $service;
 	private MockObject&PriceService $priceServiceMock;
 	private MockObject&SessionService $sessionServiceMock;
@@ -32,18 +34,24 @@ class StripeServiceTest extends TestCase
 	private MockObject&CustomerService $customerServiceMock;
 	private MockObject&BillingPortalServiceFactory $billingPortalFactoryMock;
 	private MockObject&\Stripe\Service\BillingPortal\SessionService $billingPortalServiceMock;
+	// stripe subscription items mock
+	private MockObject&\Stripe\Service\SubscriptionItemService $subscriptionItemServiceMock;
 
 	protected function setUp(): void
 	{
 		$this->stripeClient = $this->createMock(StripeClient::class);
 		$this->entityManager = $this->createMock(EntityManagerInterface::class);
 		$this->subscriptionRepositoryMock = $this->createMock(\App\Repository\SubscriptionRepository::class);
+		$this->userRepositoryMock = $this->createMock(\App\Repository\UserRepository::class);
+		$this->planRepositoryMock = $this->createMock(\App\Repository\PlanRepository::class);
+
 		$this->priceServiceMock = $this->createMock(PriceService::class);
 		$this->sessionServiceMock = $this->createMock(SessionService::class);
 		$this->checkoutServiceMock = $this->createMock(CheckoutServiceFactory::class);
 		$this->customerServiceMock = $this->createMock(CustomerService::class);
 		$this->billingPortalFactoryMock = $this->createMock(BillingPortalServiceFactory::class);
 		$this->billingPortalServiceMock = $this->createMock(\Stripe\Service\BillingPortal\SessionService::class);
+		$this->subscriptionItemServiceMock = $this->createMock(\Stripe\Service\SubscriptionItemService::class);
 
 		$this->stripeClient->prices = $this->priceServiceMock;
 		$this->stripeClient->checkout = $this->checkoutServiceMock;
@@ -51,6 +59,7 @@ class StripeServiceTest extends TestCase
 		$this->stripeClient->customers = $this->customerServiceMock;
 		$this->stripeClient->billingPortal = $this->billingPortalFactoryMock;
 		$this->billingPortalFactoryMock->sessions = $this->billingPortalServiceMock;
+		$this->stripeClient->subscriptionItems = $this->subscriptionItemServiceMock;
 
 		$paramMock = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface::class);
 		$paramMock->method('get')
@@ -58,11 +67,19 @@ class StripeServiceTest extends TestCase
 				['app.default_uri', $_ENV['DEFAULT_URI']],
 			]);
 
+		$this->userRepositoryMock
+			->method('findOneBy')
+			->willReturn((new User())->setEmail('test@example.com')->setStripeCustomerId('cus_test_123'));
+
+		$this->planRepositoryMock
+			->method('find')
+			->willReturn((new Plan())->setName('Basic')->setStripeMonthlyLookupKey('price_123'));
+
 		$this->service = new StripeService(
 			$this->stripeClient,
 			$this->entityManager,
-			$this->createMock(\App\Repository\UserRepository::class),
-			$this->createMock(\App\Repository\PlanRepository::class),
+			$this->userRepositoryMock,
+			$this->planRepositoryMock,
 			$this->subscriptionRepositoryMock,
 			$paramMock
 		);
@@ -351,6 +368,45 @@ class StripeServiceTest extends TestCase
 		];
 	}
 
+	public function testHandleCheckoutSessionCompletedSetsCurrentPeriodDetails(): void
+	{
+		// Arrange
+		$eventData = \Stripe\Checkout\Session::constructFrom([
+			'id' => 'cs_test_12345',
+			'object' => 'checkout.session',
+			'subscription' => 'sub_test_123',
+			'metadata' => [
+				'planId' => 1,
+				'billingPeriod' => 'monthly',
+			],
+		]);
+		$this->subscriptionItemServiceMock->expects($this->once())
+			->method('all')
+			->with([
+				'subscription' => 'sub_test_123',
+				'limit' => 1,
+			])
+			->willReturn((object)[
+				'data' => [(object)[
+					'current_period_start' => time(),
+					'current_period_end' => time() + 2592000, // +30 days
+				]],
+			]);
+
+		$this->subscriptionRepositoryMock->expects($this->once())
+			->method('save')
+			->with(
+				$this->callback(function ($subscription) {
+					return $subscription->getCurrentPeriodStart() instanceof \DateTimeImmutable
+						&& $subscription->getCurrentPeriodEnd() instanceof \DateTimeImmutable;
+				}),
+				$this->anything()
+			);
+
+		// Act & Assert
+		$this->service->handleCheckoutSessionCompleted($eventData);
+	}
+
 	/**
 	 * @dataProvider customerSubscriptionUpdatedProvider
 	 */
@@ -433,6 +489,8 @@ class StripeServiceTest extends TestCase
 				'price' => (object)[
 					'lookup_key' => $lookupKey,
 				],
+				'current_period_start' => time(),
+				'current_period_end' => time() + 2592000, // +30
 			]],
 		];
 

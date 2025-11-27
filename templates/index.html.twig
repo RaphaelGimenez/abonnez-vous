@@ -20,15 +20,18 @@
 								mensuel
 							{%- endif -%}
 						</span>
-
 					</p>
-					{# {% if currentSubscription.isAutoRenew %}
-											<p class="text-green-600 mb-4">Votre abonnement sera renouvelé automatiquement le
-												<span class="font-medium">{{ currentSubscription.endDate|date('Y-m-d') }}</span>.</p>
-										{% else %}
-											<p class="text-red-600 mb-4">Votre abonnement ne sera pas renouvelé et prendra fin le
-												<span class="font-medium">{{ currentSubscription.endDate|date('Y-m-d') }}</span>.</p>
-										{% endif %} #}
+
+					{% if currentSubscription.isCancelling() %}
+						<p class="text-red-600 mb-4">Votre abonnement est en cours d'annulation et prendra fin le
+							<span class="font-medium">{{ currentSubscription.cancelAt|date('Y-m-d') }}</span>
+							.</p>
+					{% else %}
+						<p class="text-green-600 mb-4">Votre abonnement sera automatiquement renouvelé le
+							<span class="font-medium">{{ currentSubscription.currentPeriodEnd|date('Y-m-d') }}</span>
+							.</p>
+					{% endif %}
+
 					<a href="{{ path('app_subscription_manage') }}" class="inline-block bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 px-4 rounded transition duration-200">Gérer mon abonnement</a>
 				</div>
 			{% else %}

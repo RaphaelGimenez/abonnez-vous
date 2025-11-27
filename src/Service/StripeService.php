@@ -139,7 +139,11 @@ class StripeService
 	public function handleCheckoutSessionCompleted(mixed $session): void
 	{
 		$customerId = $session->customer;
-		$subscriptionId = $session->subscription;
+		$stripeSubscriptionId = $session->subscription;
+		$stripeSubscriptionItem = $this->stripeClient->subscriptionItems->all([
+			'subscription' => $stripeSubscriptionId,
+			'limit' => 1,
+		])->data[0];
 		$metadata = $session->metadata ?? null;
 
 		$planId = $metadata->planId ?? null;
@@ -152,11 +156,13 @@ class StripeService
 		$subscription = new Subscription();
 		$subscription->setUser($user);
 		$subscription->setPlan($plan);
-		$subscription->setStripeSubscriptionId($subscriptionId);
+		$subscription->setStripeSubscriptionId($stripeSubscriptionId);
 		$subscription->setBillingPeriod($billingPeriod);
+		$subscription->setStatus(SubscriptionStatus::ACTIVE);
+		$subscription->setCurrentPeriodStart((new \DateTimeImmutable())->setTimestamp($stripeSubscriptionItem->current_period_start));
+		$subscription->setCurrentPeriodEnd((new \DateTimeImmutable())->setTimestamp($stripeSubscriptionItem->current_period_end));
 
-		$this->entityManager->persist($subscription);
-		$this->entityManager->flush();
+		$this->subscriptionRepository->save($subscription);
 	}
 
 	/**
