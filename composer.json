@@ -72,7 +72,11 @@
 			"importmap:install": "symfony-cmd"
 		},
 		"post-install-cmd": [
-			"@auto-scripts"
+			"@auto-scripts",
+			"mkdir -p var/",
+			"touch var/data_production.db",
+			"chmod 777 var/",
+			"chmod 666 var/data_production.db"
 		],
 		"post-update-cmd": [
 			"@auto-scripts"
