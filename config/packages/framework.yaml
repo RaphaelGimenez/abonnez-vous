@@ -4,8 +4,15 @@ framework:
 
     # Note that the session will be started ONLY if you read or write from it.
     session:
-        cookie_secure: auto
-        cookie_samesite: lax
+      handler_id: null  # Use native PHP sessions
+      save_path: null   # Use default /tmp
+
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
+    trusted_headers:
+      - 'x-forwarded-for'
+      - 'x-forwarded-proto'
+      - 'x-forwarded-host'
+      - 'x-forwarded-port'
 
     #esi: true
     #fragments: true
