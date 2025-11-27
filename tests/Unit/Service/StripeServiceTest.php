@@ -41,12 +41,18 @@ class StripeServiceTest extends TestCase
 		$this->checkoutServiceMock->sessions = $this->sessionServiceMock;
 		$this->stripeClient->customers = $this->customerServiceMock;
 
+		$paramMock = $this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface::class);
+		$paramMock->method('get')
+			->willReturnMap([
+				['app.default_uri', $_ENV['DEFAULT_URI']],
+			]);
+
 		$this->service = new StripeService(
 			$this->stripeClient,
 			$this->entityManager,
 			$this->createMock(\App\Repository\UserRepository::class),
 			$this->createMock(\App\Repository\PlanRepository::class),
-			$this->createMock(\Symfony\Component\DependencyInjection\ParameterBag\ContainerBagInterface::class)
+			$paramMock
 		);
 	}
 
@@ -79,7 +85,9 @@ class StripeServiceTest extends TestCase
 			->with($this->callback(function ($params) use ($user) {
 				return $params['mode'] === 'subscription'
 					&& $params['customer'] === $user->getStripeCustomerId()
-					&& $params['line_items'][0]['price'] === "price_12345";
+					&& $params['line_items'][0]['price'] === "price_12345"
+					&& $params['success_url'] === $_ENV['DEFAULT_URI']
+					&& $params['cancel_url'] === $_ENV['DEFAULT_URI'] . '/subscription/subscribe?canceled=true';
 			}))
 			->willReturn($checkoutSessionMock);
 

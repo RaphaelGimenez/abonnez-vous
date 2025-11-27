@@ -78,8 +78,8 @@ class StripeService
 				'planId' => $plan->getId(),
 				'billingPeriod' => $billingPeriod->value,
 			],
-			'success_url' =>  'http://localhost:8000/subscription/success',
-			'cancel_url' =>  'http://localhost:8000/subscription/cancel',
+			'success_url' =>  $this->params->get('app.default_uri'),
+			'cancel_url' =>  $this->params->get('app.default_uri') . '/subscription/subscribe?canceled=true',
 		]);
 
 		return $session;

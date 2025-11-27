@@ -7,6 +7,7 @@ parameters:
     stripe.secret_key: '%env(STRIPE_SECRET_KEY)%'
     stripe.public_key: '%env(STRIPE_PUBLIC_KEY)%'
     stripe.webhook_secret: '%env(STRIPE_WEBHOOK_SECRET)%'
+    app.default_uri: '%env(DEFAULT_URI)%'
 
 services:
     # default configuration for services in *this* file
