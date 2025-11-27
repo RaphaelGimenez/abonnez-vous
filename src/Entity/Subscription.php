@@ -37,6 +37,12 @@ class Subscription
 	#[ORM\Column]
 	private SubscriptionBillingPeriod $billingPeriod = SubscriptionBillingPeriod::MONTHLY;
 
+	#[ORM\Column(type: 'datetime_immutable', nullable: true)]
+	private ?\DateTimeImmutable $currentPeriodStart = null;
+
+	#[ORM\Column(type: 'datetime_immutable', nullable: true)]
+	private ?\DateTimeImmutable $currentPeriodEnd = null;
+
 	/**
 	 * Cancellation reason provided by the user when requesting cancellation.
 	 */
@@ -114,6 +120,29 @@ class Subscription
 		return $this;
 	}
 
+	public function getCurrentPeriodStart(): ?\DateTimeImmutable
+	{
+		return $this->currentPeriodStart;
+	}
+
+	public function setCurrentPeriodStart(?\DateTimeImmutable $currentPeriodStart): static
+	{
+		$this->currentPeriodStart = $currentPeriodStart;
+
+		return $this;
+	}
+	public function getCurrentPeriodEnd(): ?\DateTimeImmutable
+	{
+		return $this->currentPeriodEnd;
+	}
+
+	public function setCurrentPeriodEnd(?\DateTimeImmutable $currentPeriodEnd): static
+	{
+		$this->currentPeriodEnd = $currentPeriodEnd;
+
+		return $this;
+	}
+
 	public function getCancellationReason(): ?string
 	{
 		return $this->cancellationReason;
@@ -137,5 +166,13 @@ class Subscription
 		$this->cancelAt = $cancelAt;
 
 		return $this;
+	}
+
+	/**
+	 * Helpers
+	 */
+	public function isCancelling(): bool
+	{
+		return $this->cancelAt !== null;
 	}
 }
