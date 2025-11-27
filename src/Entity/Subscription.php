@@ -37,6 +37,18 @@ class Subscription
 	#[ORM\Column]
 	private SubscriptionBillingPeriod $billingPeriod = SubscriptionBillingPeriod::MONTHLY;
 
+	/**
+	 * Cancellation reason provided by the user when requesting cancellation.
+	 */
+	#[ORM\Column(length: 255, nullable: true)]
+	private ?string $cancellationReason = null;
+
+	/**
+	 * Cancellation effective date given by Stripe.
+	 */
+	#[ORM\Column(type: 'datetime_immutable', nullable: true)]
+	private ?\DateTimeImmutable $cancelAt = null;
+
 	public function getId(): ?int
 	{
 		return $this->id;
@@ -98,6 +110,31 @@ class Subscription
 	public function setBillingPeriod(SubscriptionBillingPeriod $billingPeriod): static
 	{
 		$this->billingPeriod = $billingPeriod;
+
+		return $this;
+	}
+
+	public function getCancellationReason(): ?string
+	{
+		return $this->cancellationReason;
+	}
+
+
+	public function setCancellationReason(?string $cancellationReason): static
+	{
+		$this->cancellationReason = $cancellationReason;
+
+		return $this;
+	}
+
+	public function getCancelAt(): ?\DateTimeImmutable
+	{
+		return $this->cancelAt;
+	}
+
+	public function setCancelAt(?\DateTimeImmutable $cancelAt): static
+	{
+		$this->cancelAt = $cancelAt;
 
 		return $this;
 	}

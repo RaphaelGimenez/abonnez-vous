@@ -357,19 +357,7 @@ class StripeServiceTest extends TestCase
 	public function testHandleCustomerSubscriptionUpdatedUpdatesSubscriptionStatus(string $subscriptionStatus, SubscriptionStatus $expectedStatus): void
 	{
 		// Arrange
-		$plan = new Plan();
-		$plan->setName('Basic');
-		$plan->setStripeMonthlyLookupKey('price_123');
-
-		$user = new User();
-		$user->setEmail('test@example.com');
-		$user->setStripeCustomerId('cus_test_123');
-
-		$subscriptionEntity = new Subscription();
-		$subscriptionEntity->setStripeSubscriptionId('sub_test_123');
-		$subscriptionEntity->setUser($user);
-		$subscriptionEntity->setPlan($plan);
-		$subscriptionEntity->setStatus(SubscriptionStatus::ACTIVE);
+		$subscriptionEntity = $this->createSubscriptionEntity('sub_test_123', SubscriptionStatus::ACTIVE);
 
 		$this->subscriptionRepositoryMock->expects($this->once())
 			->method('findOneBy')
@@ -390,7 +378,53 @@ class StripeServiceTest extends TestCase
 		$this->service->handleCustomerSubscriptionUpdated($subscription);
 	}
 
-	public function createStripeSubscription(string $id, string $status, string $lookupKey): \Stripe\Subscription
+	public function testHandleCustomerSubscriptionUpdatedSetCancellationFields(): void
+	{
+		// Arrange
+		$subscriptionEntity = $this->createSubscriptionEntity('sub_test_123', SubscriptionStatus::ACTIVE);
+
+		$subscriptionMock = $this->createStripeSubscription('sub_test_123', 'active', 'price_123', true);
+
+		$this->subscriptionRepositoryMock->expects($this->once())
+			->method('findOneBy')
+			->with(['stripeSubscriptionId' => 'sub_test_123'])
+			->willReturn($subscriptionEntity);
+
+		$this->subscriptionRepositoryMock->expects($this->once())
+			->method('save')
+			->with(
+				$this->callback(function ($subscription) use ($subscriptionMock) {
+					return $subscription->getCancellationReason() === 'cancellation_requested'
+						&& $subscription->getCancelAt() instanceof \DateTimeImmutable
+						&& $subscription->getCancelAt()->getTimestamp() === $subscriptionMock->cancel_at;
+				}),
+				$this->anything()
+			);
+
+		// Act & Assert
+		$this->service->handleCustomerSubscriptionUpdated($subscriptionMock);
+	}
+
+	public function createSubscriptionEntity(string $stripeSubscriptionId, SubscriptionStatus $status): Subscription
+	{
+		$plan = new Plan();
+		$plan->setName('Basic');
+		$plan->setStripeMonthlyLookupKey('price_123');
+
+		$user = new User();
+		$user->setEmail('test@example.com');
+		$user->setStripeCustomerId('cus_test_123');
+
+		$subscription = new Subscription();
+		$subscription->setStripeSubscriptionId($stripeSubscriptionId);
+		$subscription->setStatus($status);
+		$subscription->setPlan($plan);
+		$subscription->setUser($user);
+
+		return $subscription;
+	}
+
+	public function createStripeSubscription(string $id, string $status, string $lookupKey, bool $withCancellationDetails = false): \Stripe\Subscription
 	{
 		$subscription = new \Stripe\Subscription($id);
 		$subscription->status = $status;
@@ -401,6 +435,14 @@ class StripeServiceTest extends TestCase
 				],
 			]],
 		];
+
+		if ($withCancellationDetails) {
+			$subscription->cancellation_details = (object)[
+				'reason' => 'cancellation_requested',
+			];
+			$subscription->cancel_at = time() + 3600; // Set to cancel in the future
+		}
+
 		return $subscription;
 	}
 
