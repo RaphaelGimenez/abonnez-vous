@@ -76,6 +76,26 @@ class SubscriptionControllerTest extends WebTestCase
 		$this->assertStringContainsString('checkout.stripe.com', $redirectUrl, 'User should be redirected to Stripe Checkout');
 	}
 
+	public function testUserIsRedirectedToStripeBillingPortalWhenManagingSubscription(): void
+	{
+		// Arrange
+		$user = $this->createAuthenticatedUser();
+		$plan = PlanFactory::createOne();
+		SubscriptionFactory::createOne([
+			'user' => $user,
+			'plan' => $plan,
+			'status' => SubscriptionStatus::ACTIVE,
+		]);
+
+		// Act
+		$this->client->request('GET', '/subscription/manage');
+
+		// Assert
+		$this->assertResponseRedirects();
+		$redirectUrl = $this->client->getResponse()->headers->get('Location');
+		$this->assertStringContainsString('billing.stripe.com', $redirectUrl, 'User should be redirected to Stripe Checkout');
+	}
+
 	public function testUserCannotSubscribeTwice(): void
 	{
 		// Arrange
