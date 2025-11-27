@@ -85,6 +85,15 @@ class StripeService
 		return $session;
 	}
 
+	public function createBillingPortalSession()
+	{
+		$session = [
+			'url' => 'https://billing.stripe.com/test/portal_12345',
+		];
+
+		return (object) $session;
+	}
+
 	public function getOrCreateStripeCustomerId(User $user): string
 	{
 		if ($user->getStripeCustomerId()) {

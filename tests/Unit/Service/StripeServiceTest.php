@@ -242,6 +242,15 @@ class StripeServiceTest extends TestCase
 		);
 	}
 
+	public function testCreateBillingPortalSessionReturnsStripeUrl(): void
+	{
+		// Act
+		$session = $this->service->createBillingPortalSession();
+
+		// Assert
+		$this->assertSame('https://billing.stripe.com/test/portal_12345', $session->url);
+	}
+
 	public function testCreateCheckoutSessionAddsMetadata(): void
 	{
 		// Arrange
