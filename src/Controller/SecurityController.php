@@ -6,6 +6,7 @@ use App\Entity\User;
 use App\Form\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -30,8 +31,12 @@ class SecurityController extends AbstractController
 	}
 
 	#[Route('/register', name: 'app_register')]
-	public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, EntityManagerInterface $entityManager): Response
-	{
+	public function register(
+		Request $request,
+		UserPasswordHasherInterface $userPasswordHasher,
+		EntityManagerInterface $entityManager,
+		Security $security
+	): Response {
 		// redirect to subscription management if user is already logged in
 		if ($this->getUser()) {
 			/** @var User $user */
@@ -64,6 +69,9 @@ class SecurityController extends AbstractController
 
 			$entityManager->persist($user);
 			$entityManager->flush();
+
+			// log the user in automatically
+			$security->login($user);
 
 			return $this->redirectToRoute('app_subscription');
 		}
